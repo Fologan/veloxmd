@@ -4,7 +4,11 @@
 
 // Editor classes
 export { LiveEditor } from './editor.js'
+export type { EditorOptions } from './editor.js'
 export { LiveEditorPlus } from './editorPlus.js'
+
+// Viewer (static read-only)
+export { LiveViewer } from './viewer.js'
 
 // Hybrid mode
 export { HybridController } from './hybrid.js'

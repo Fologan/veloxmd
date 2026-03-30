@@ -30,7 +30,7 @@ export class LiveEditor {
   protected lines: string[] = ['']
   protected rendering = false
   protected focusedLine = -1
-  protected viewMode: ViewMode = 'live'
+  protected viewMode: ViewMode = 'source'
   private hybrid = new HybridController()
   private boundSelectionChange = () => this.onSelectionChange()
   private changeCallback: ((text: string) => void) | null = null

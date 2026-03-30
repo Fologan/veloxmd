@@ -1,5 +1,5 @@
 // =============================================================================
-// UltraMD Types — shared across base and plus modules
+// FastMD Types — shared across base and plus modules
 // =============================================================================
 
 /** Block-level element types (base) */
@@ -80,7 +80,7 @@ export interface LiveLine {
 }
 
 /** Editor view modes */
-export type ViewMode = 'live' | 'hybrid'
+export type ViewMode = 'source' | 'hybrid'
 
 /** Multi-line parse state (used by plus block parser) */
 export interface ParseState {

@@ -527,3 +527,41 @@
 .live-link-text {
   animation: fmtPop 0.12s ease-out;
 }
+
+/* ---- Static mode (LiveViewer) — hide all syntax markers ---- */
+
+.live-static .syntax {
+  display: none !important;
+}
+
+.live-static .live-link-url {
+  display: none;
+}
+
+.live-static .live-code-fence {
+  display: none;
+}
+
+.live-static .live-table-separator {
+  display: none;
+}
+
+.live-static .live-alt-heading-marker {
+  display: none;
+}
+
+.live-static .live-checkbox,
+.live-static .live-checked {
+  font-size: 0;
+}
+
+.live-static .live-checkbox::after {
+  font-size: 16px;
+  content: '\2610';
+  margin-right: 6px;
+}
+
+.live-static .live-checked::after {
+  font-size: 16px;
+  content: '\2611';
+}

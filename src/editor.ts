@@ -20,6 +20,11 @@ interface Snapshot {
 const MAX_HISTORY = 200
 const MERGE_WINDOW = 400 // ms — consecutive typing merges into one undo entry
 
+export interface EditorOptions {
+  onChange?: (text: string) => void
+  placeholder?: string
+}
+
 export class LiveEditor {
   protected root: HTMLDivElement
   protected lines: string[] = ['']
@@ -28,6 +33,7 @@ export class LiveEditor {
   protected viewMode: ViewMode = 'live'
   private hybrid = new HybridController()
   private boundSelectionChange = () => this.onSelectionChange()
+  private changeCallback: ((text: string) => void) | null = null
 
   // Undo / redo stacks
   private undoStack: Snapshot[] = []
@@ -35,13 +41,14 @@ export class LiveEditor {
   private lastSnapshotTime = 0
   private pendingSnapshot: Snapshot | null = null
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, options?: EditorOptions) {
     this.root = document.createElement('div')
     this.root.className = 'live-editor'
     this.root.contentEditable = 'true'
     this.root.spellcheck = false
-    this.root.setAttribute('data-placeholder', 'Start typing markdown\u2026')
+    this.root.setAttribute('data-placeholder', options?.placeholder ?? 'Start typing markdown\u2026')
     container.appendChild(this.root)
+    if (options?.onChange) this.changeCallback = options.onChange
 
     this.root.addEventListener('input', () => this.onInput())
     this.root.addEventListener('paste', (e) => this.onPaste(e))
@@ -83,6 +90,40 @@ export class LiveEditor {
 
   getViewMode(): ViewMode {
     return this.viewMode
+  }
+
+  onChange(callback: (text: string) => void): void {
+    this.changeCallback = callback
+  }
+
+  insert(text: string): void {
+    const cursor = this.saveCursor()
+    if (!cursor) return
+
+    this.pushSnapshot()
+
+    let charsBefore = 0
+    for (let i = 0; i < cursor.line && i < this.lines.length; i++) {
+      charsBefore += this.lines[i].length + 1
+    }
+    charsBefore += cursor.offset
+
+    const fullText = this.getValue()
+    this.lines = (fullText.slice(0, charsBefore) + text + fullText.slice(charsBefore)).split('\n')
+
+    // Cursor after inserted text
+    let remaining = charsBefore + text.length
+    let newLine = 0
+    for (let i = 0; i < this.lines.length; i++) {
+      if (remaining <= this.lines[i].length) { newLine = i; break }
+      remaining -= this.lines[i].length + 1
+      newLine = i + 1
+    }
+
+    this.renderAll()
+    this.restoreCursor({ line: newLine, offset: Math.max(0, remaining) })
+    this.redoStack.length = 0
+    this.emitChange()
   }
 
   // ---------------------------------------------------------------------------
@@ -182,6 +223,10 @@ export class LiveEditor {
   // Event handlers
   // ---------------------------------------------------------------------------
 
+  private emitChange(): void {
+    if (this.changeCallback) this.changeCallback(this.getValue())
+  }
+
   protected onInput(): void {
     if (this.rendering) return
     const cursor = this.saveCursor()
@@ -189,6 +234,7 @@ export class LiveEditor {
     this.recordChange()
     this.renderAll()
     if (cursor) this.restoreCursor(cursor)
+    this.emitChange()
   }
 
   protected onPaste(e: ClipboardEvent): void {
@@ -234,6 +280,7 @@ export class LiveEditor {
     this.renderAll()
     this.restoreCursor({ line: newLine, offset: Math.max(0, remaining) })
     this.redoStack.length = 0
+    this.emitChange()
   }
 
   protected onKeyDown(e: KeyboardEvent): void {

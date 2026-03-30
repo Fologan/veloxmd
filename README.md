@@ -11,7 +11,7 @@ The text formats itself as you type — no split view, no separate preview pane.
 ## Install
 
 ```bash
-npm install fastmd
+npm install @fologan/fastmd
 ```
 
 ## Quick Start
@@ -19,8 +19,8 @@ npm install fastmd
 ### Basic Editor
 
 ```ts
-import { LiveEditor } from 'fastmd'
-import 'fastmd/styles.css'
+import { LiveEditor } from '@fologan/fastmd'
+import '@fologan/fastmd/styles.css'
 
 const editor = new LiveEditor(document.getElementById('editor'))
 editor.setValue('# Hello **world**')
@@ -29,17 +29,43 @@ editor.setValue('# Hello **world**')
 ### Full-Featured Editor
 
 ```ts
-import { LiveEditorPlus } from 'fastmd'
-import 'fastmd/styles.css'
+import { LiveEditorPlus } from '@fologan/fastmd'
+import '@fologan/fastmd/styles.css'
 
-const editor = new LiveEditorPlus(document.getElementById('editor'))
+const editor = new LiveEditorPlus(document.getElementById('editor'), {
+  onChange: (text) => console.log('Content changed:', text.length, 'chars'),
+  placeholder: 'Start writing...',
+})
+
 editor.setValue('# Hello **world**')
+```
 
-// Get the raw markdown
-const md = editor.getValue()
+### Static Viewer (read-only)
 
-// Toggle hybrid mode (syntax hides on unfocused lines)
+```ts
+import { LiveViewer } from '@fologan/fastmd'
+import '@fologan/fastmd/styles.css'
+
+const viewer = new LiveViewer(document.getElementById('preview'))
+viewer.setValue('# Hello **world**')
+```
+
+Same CSS, same styling — but no `contenteditable`, no event listeners, no undo stack. One-pass render, zero runtime overhead.
+
+## View Modes
+
+FastMD has three ways to display markdown:
+
+| Mode | Class | What you see |
+|------|-------|-------------|
+| **Source** | `LiveEditorPlus` | Full editor. Syntax markers visible but dimmed, brighten on the focused line. |
+| **Hybrid** | `LiveEditorPlus` + `setViewMode('hybrid')` | Editor. Syntax markers collapse to zero-width on unfocused lines, expand with animation on focus. |
+| **Static** | `LiveViewer` | Read-only. No syntax markers, no editing. Rendered document output. |
+
+```ts
+// Switch between source and hybrid at runtime
 editor.setViewMode('hybrid')
+editor.setViewMode('source')
 ```
 
 ## How It Works
@@ -49,6 +75,10 @@ FastMD uses **character parity** — a design principle where every raw markdown
 This means the flat character offset in your raw text always matches the flat offset in the DOM. Cursor save/restore after re-rendering becomes trivial — no complex position mapping needed. The entire cursor system is ~50 lines of code.
 
 The editor uses `contenteditable` with full re-rendering on each keystroke. Because every character has a 1:1 DOM representation, this "naive" approach just works, and the codebase stays small.
+
+### Hybrid Mode
+
+In hybrid mode, syntax spans on unfocused lines collapse to `width: 0` via CSS transitions. The `HybridController` measures text widths using an offscreen canvas (`measureText`) so the CSS can animate between collapsed and expanded states. Click correction compensates for the layout shift — when you click a collapsed line, the controller maps the visual click position to the correct character offset in the expanded layout.
 
 ## Markdown Support
 
@@ -86,7 +116,6 @@ The editor uses `contenteditable` with full re-rendering on each keystroke. Beca
 FastMD uses CSS custom properties prefixed with `--fastmd-`. Override them to match your app's design:
 
 ```css
-/* Custom theme */
 .my-editor-container {
   --fastmd-bg: #1a1a2e;
   --fastmd-text: #eaeaea;
@@ -112,19 +141,36 @@ A built-in dark theme is available by setting `data-theme="dark"` on any ancesto
 ### `LiveEditor` / `LiveEditorPlus`
 
 ```ts
-new LiveEditor(container: HTMLElement)
-new LiveEditorPlus(container: HTMLElement)
+new LiveEditor(container: HTMLElement, options?: EditorOptions)
+new LiveEditorPlus(container: HTMLElement, options?: EditorOptions)
+
+interface EditorOptions {
+  onChange?: (text: string) => void  // fires on every content change
+  placeholder?: string              // placeholder text when editor is empty
+}
 
 editor.setValue(markdown: string): void
 editor.getValue(): string
-editor.setViewMode(mode: 'live' | 'hybrid'): void
-editor.getViewMode(): 'live' | 'hybrid'
+editor.setViewMode(mode: 'source' | 'hybrid'): void
+editor.getViewMode(): 'source' | 'hybrid'
+editor.onChange(callback: (text: string) => void): void
+editor.insert(text: string): void   // insert at cursor position
+editor.destroy(): void              // remove DOM and clean up listeners
+```
+
+### `LiveViewer`
+
+```ts
+new LiveViewer(container: HTMLElement)
+
+viewer.setValue(markdown: string): void
+viewer.destroy(): void
 ```
 
 ### Parsers
 
 ```ts
-import { parseLiveDocument, parseLiveDocumentPlus } from 'fastmd'
+import { parseLiveDocument, parseLiveDocumentPlus } from '@fologan/fastmd'
 
 const lines = parseLiveDocument(['# Hello', '', '**Bold** text'])
 // Returns LiveLine[] with block types and inline segments
@@ -133,7 +179,7 @@ const lines = parseLiveDocument(['# Hello', '', '**Bold** text'])
 ### Cursor Utilities
 
 ```ts
-import { getFlatOffset, setFlatOffset } from 'fastmd'
+import { getFlatOffset, setFlatOffset } from '@fologan/fastmd'
 
 // Convert DOM position -> flat character offset
 const offset = getFlatOffset(container, node, nodeOffset)

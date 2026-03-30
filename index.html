@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UltraMD Live — Real-time Markdown Editor</title>
+  <style>
+    /* =========================================================================
+       UltraMD Live — In-place Markdown Editor
+       The text formats itself. No split view. Just write.
+       ========================================================================= */
+
+    /* Light theme (default) */
+    :root {
+      --bg: #ffffff;
+      --surface: #f6f8fa;
+      --surface-2: #eef1f5;
+      --border: #d1d9e0;
+      --border-bright: #b8c0cc;
+      --text: #1f2328;
+      --text-bright: #000000;
+      --text-muted: #636c76;
+      --syntax: #a0a8b4;
+      --accent: #0969da;
+      --green: #1a7f37;
+      --purple: #8250df;
+      --red: #cf222e;
+      --orange: #bc4c00;
+    }
+
+    /* Dark theme */
+    [data-theme="dark"] {
+      --bg: #0a0e17;
+      --surface: #0d1117;
+      --surface-2: #161b22;
+      --border: #21262d;
+      --border-bright: #30363d;
+      --text: #c9d1d9;
+      --text-bright: #e6edf3;
+      --text-muted: #7d8590;
+      --syntax: #484f58;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --purple: #d2a8ff;
+      --red: #ff7b72;
+      --orange: #ffa657;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-bright);
+    }
+    .header h1 .a { color: var(--accent); }
+
+    .badge {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 3px;
+      margin-left: 2px;
+      vertical-align: middle;
+    }
+
+    .header .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .header .btn {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .header .btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* ---- Editor container ---- */
+
+    .editor-wrap {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      justify-content: center;
+      padding: 48px 24px 120px;
+    }
+
+    .editor-wrap::-webkit-scrollbar { width: 8px; }
+    .editor-wrap::-webkit-scrollbar-track { background: transparent; }
+    .editor-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    #editor-root {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    /* ---- Live Editor ---- */
+
+    .live-editor {
+      outline: none;
+      font-size: 16px;
+      line-height: 1.85;
+      color: var(--text);
+      caret-color: var(--accent);
+      min-height: 300px;
+    }
+
+    .live-editor:empty::before {
+      content: attr(data-placeholder);
+      color: var(--text-muted);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* ---- Lines ---- */
+
+    .live-line {
+      position: relative;
+      min-height: 1.85em;
+      padding: 0 2px;
+      border-radius: 3px;
+      transition: background-color 0.15s;
+    }
+
+    .live-line.focused {
+      background: rgba(88, 166, 255, 0.03);
+    }
+
+    /* ---- Syntax markers ---- */
+    /* Markers are always present, always editable, but dim.
+       They "activate" (brighten) when the cursor is on their line. */
+
+    .live-line .syntax {
+      color: var(--syntax);
+      opacity: 0.3;
+      transition: opacity 0.2s ease, color 0.2s ease;
+      font-weight: normal;
+      font-style: normal;
+      text-decoration: none;
+    }
+
+    .live-line.focused .syntax {
+      opacity: 0.6;
+    }
+
+    /* ---- Hybrid mode — syntax collapses on unfocused lines ---- */
+
+    .hybrid-mode .live-line .syntax {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: baseline;
+      white-space: pre;
+    }
+
+    .hybrid-mode .live-line:not(.focused) .syntax {
+      width: 0 !important;
+      opacity: 0;
+      transition: width 0.2s ease, opacity 0.15s ease;
+    }
+
+    .hybrid-mode .live-line.focused .syntax {
+      opacity: 0.6;
+      transition: width 0.2s ease, opacity 0.15s ease;
+    }
+
+    /* In hybrid mode, code blocks and HR keep their syntax visible */
+    .hybrid-mode .live-code-fence .syntax,
+    .hybrid-mode .live-code-line .syntax,
+    .hybrid-mode .live-hr .syntax,
+    .hybrid-mode .live-table-separator .syntax {
+      display: inline !important;
+      width: auto !important;
+      opacity: 0.3;
+    }
+    .hybrid-mode .live-code-fence.focused .syntax,
+    .hybrid-mode .live-code-line.focused .syntax,
+    .hybrid-mode .live-hr.focused .syntax,
+    .hybrid-mode .live-table-separator.focused .syntax {
+      opacity: 0.6;
+    }
+
+    /* ---- Headings ---- */
+
+    .live-h1 {
+      font-size: 2em;
+      font-weight: 700;
+      color: var(--text-bright);
+      padding-bottom: 6px;
+      margin-bottom: 2px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .live-h2 {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: var(--text-bright);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .live-h3 {
+      font-size: 1.25em;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .live-h4 { font-size: 1.1em; font-weight: 600; color: var(--text-bright); }
+    .live-h5 { font-size: 1em; font-weight: 600; color: var(--text-bright); }
+    .live-h6 { font-size: 0.95em; font-weight: 600; color: var(--text-muted); }
+
+    /* Heading syntax markers are smaller */
+    .live-h1 .syntax,
+    .live-h2 .syntax,
+    .live-h3 .syntax {
+      font-size: 0.55em;
+      vertical-align: middle;
+    }
+
+    /* ---- Inline formatting ---- */
+
+    .live-line strong {
+      color: var(--text-bright);
+      font-weight: 700;
+    }
+
+    .live-line em {
+      color: var(--purple);
+    }
+
+    .live-line strong em {
+      color: var(--purple);
+    }
+
+    .live-line code {
+      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--surface-2);
+      color: var(--red);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .live-line del {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .live-link-text {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-color: rgba(88, 166, 255, 0.3);
+      text-underline-offset: 2px;
+    }
+
+    .live-link-url {
+      color: var(--text-muted);
+      font-size: 0.85em;
+      opacity: 0.6;
+    }
+
+    /* ---- Blockquote ---- */
+
+    .live-blockquote {
+      border-left: 3px solid var(--green);
+      padding-left: 16px;
+      color: var(--text-muted);
+    }
+
+    .live-blockquote .syntax {
+      color: var(--green);
+      opacity: 0.4;
+    }
+
+    /* ---- Lists ---- */
+
+    .live-ul,
+    .live-ol {
+      padding-left: 8px;
+    }
+
+    .live-ul > .syntax,
+    .live-ol > .syntax {
+      color: var(--accent);
+      opacity: 0.7 !important;
+      font-weight: 600;
+    }
+
+    /* ---- Code blocks ---- */
+
+    .live-code-fence {
+      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+      color: var(--syntax);
+      opacity: 0.5;
+      padding: 2px 4px;
+    }
+
+    .live-code-line {
+      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 12px;
+      margin-left: 4px;
+      border-left: 2px solid var(--border-bright);
+    }
+
+    .live-code-line code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    /* ---- Horizontal rule ---- */
+
+    .live-hr {
+      color: var(--syntax);
+      opacity: 0.3;
+      text-align: center;
+      position: relative;
+    }
+
+    .live-hr::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* ---- Tables ---- */
+
+    .live-table-header,
+    .live-table-row {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.92em;
+      background: var(--surface);
+      padding: 2px 4px;
+      border-left: 2px solid var(--accent);
+      margin-left: 4px;
+    }
+
+    .live-table-header {
+      font-weight: 700;
+      color: var(--text-bright);
+      border-left-color: var(--accent);
+    }
+
+    .live-table-separator {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.85em;
+      color: var(--syntax);
+      opacity: 0.35;
+      border-left: 2px solid var(--accent);
+      margin-left: 4px;
+      padding: 0 4px;
+    }
+
+    .live-table-row {
+      border-left-color: var(--border-bright);
+    }
+
+    /* ---- Task lists ---- */
+
+    .live-task {
+      padding-left: 8px;
+    }
+
+    .live-checkbox {
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .live-checked {
+      color: var(--green);
+    }
+
+    /* ---- Nested blockquotes ---- */
+
+    .live-blockquote[data-depth="2"] { border-left-width: 6px; padding-left: 20px; }
+    .live-blockquote[data-depth="3"] { border-left-width: 9px; padding-left: 24px; }
+
+    /* ---- Alt headings ---- */
+
+    .live-alt-heading-marker {
+      color: var(--syntax);
+      opacity: 0.25;
+      font-size: 0.7em;
+    }
+
+    /* ---- Footnotes ---- */
+
+    .live-footnote-ref {
+      color: var(--accent);
+      font-size: 0.8em;
+    }
+
+    .live-footnote-def {
+      padding-left: 16px;
+      border-left: 2px solid var(--purple);
+      color: var(--text-muted);
+      font-size: 0.92em;
+    }
+
+    .live-footnote-label {
+      color: var(--purple);
+      font-weight: 600;
+    }
+
+    /* ---- Reference links ---- */
+
+    .live-ref-label {
+      color: var(--text-muted);
+      font-size: 0.85em;
+    }
+
+    .live-link-title {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.9em;
+    }
+
+    /* ---- Autolinks ---- */
+
+    .live-autolink {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-color: rgba(88, 166, 255, 0.3);
+    }
+
+    /* ---- HTML inline ---- */
+
+    .live-html-tag {
+      color: var(--syntax);
+      opacity: 0.4;
+      font-size: 0.88em;
+    }
+
+    .live-line kbd {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: var(--surface-2);
+      color: var(--text-bright);
+      padding: 1px 6px;
+      border: 1px solid var(--border-bright);
+      border-radius: 4px;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    .live-line mark {
+      background: rgba(255, 212, 59, 0.3);
+      color: #7d5e00;
+      padding: 1px 3px;
+      border-radius: 2px;
+    }
+
+    [data-theme="dark"] .live-line mark {
+      background: rgba(227, 179, 65, 0.2);
+      color: #e3b341;
+    }
+
+    .live-line u {
+      text-decoration: underline;
+      text-decoration-color: var(--text-muted);
+      text-underline-offset: 2px;
+    }
+
+    .live-line sup {
+      font-size: 0.75em;
+      vertical-align: super;
+      color: var(--accent);
+    }
+
+    .live-line sub {
+      font-size: 0.75em;
+      vertical-align: sub;
+      color: var(--orange);
+    }
+
+    /* ---- Math ---- */
+
+    .live-math {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-style: italic;
+      color: var(--orange);
+    }
+
+    /* ---- Hard break ---- */
+    /* <br> tags and trailing double-space: show dimmed text, then force visual line break */
+
+    .live-hard-break {
+      opacity: 0.3;
+      font-size: 0.85em;
+    }
+
+    .live-hard-break::after {
+      content: '\A';
+      white-space: pre;
+    }
+
+    /* ---- HTML comment ---- */
+
+    .live-comment {
+      color: var(--syntax);
+      opacity: 0.25;
+      font-style: italic;
+    }
+
+    /* ---- Details ---- */
+
+    .live-details-fence {
+      color: var(--syntax);
+      opacity: 0.5;
+      font-size: 0.88em;
+    }
+
+    .live-details-summary {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .live-details-toggle {
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.75em;
+      opacity: 0.6;
+      margin-right: 2px;
+      transition: opacity 0.15s;
+    }
+
+    .live-details-toggle:hover {
+      opacity: 1;
+    }
+
+    .live-details-content {
+      border-left: 2px solid var(--accent);
+      margin-left: 8px;
+      padding-left: 12px;
+      opacity: 0.85;
+    }
+
+    /* ---- Image preview ---- */
+
+    .live-image-alt {
+      color: var(--green);
+      font-style: italic;
+    }
+
+    .live-image-preview-wrap {
+      display: block;
+      margin-top: 6px;
+      margin-bottom: 4px;
+      line-height: 0;
+    }
+
+    .live-image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+    }
+
+    /* ---- Format pop animation ---- */
+
+    @keyframes fmtPop {
+      from { opacity: 0.7; }
+      to   { opacity: 1; }
+    }
+
+    .live-line strong,
+    .live-line em,
+    .live-line del,
+    .live-link-text {
+      animation: fmtPop 0.12s ease-out;
+    }
+
+    /* ---- Footer ---- */
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 10px 24px;
+      background: linear-gradient(transparent, var(--bg) 40%);
+      pointer-events: none;
+    }
+
+    .shortcut {
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .shortcut kbd {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 10px;
+      padding: 1px 5px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+    }
+
+    /* ---- Responsive ---- */
+
+    @media (max-width: 600px) {
+      .editor-wrap { padding: 24px 16px 100px; }
+      .live-editor { font-size: 15px; }
+      .footer { gap: 10px; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><span class="a">Ultra</span>MD <span class="badge">Live</span></h1>
+    <button id="load-sample" class="btn">Load sample</button>
+    <button id="theme-toggle" class="btn">Dark mode</button>
+    <button id="view-mode-toggle" class="btn">Hybrid mode</button>
+    <span class="hint">Type markdown — it renders as you write</span>
+  </div>
+
+  <div class="editor-wrap">
+    <div id="editor-root"></div>
+  </div>
+
+  <div class="footer">
+    <span class="shortcut"><kbd>#</kbd> Heading</span>
+    <span class="shortcut"><kbd>**</kbd> Bold</span>
+    <span class="shortcut"><kbd>*</kbd> Italic</span>
+    <span class="shortcut"><kbd>`</kbd> Code</span>
+    <span class="shortcut"><kbd>></kbd> Quote</span>
+    <span class="shortcut"><kbd>-</kbd> List</span>
+    <span class="shortcut"><kbd>~~</kbd> Strike</span>
+  </div>
+
+  <script type="module" src="/src/demo.ts"></script>
+  <script>
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('click', () => {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        toggle.textContent = 'Dark mode';
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        toggle.textContent = 'Light mode';
+      }
+    });
+  </script>
+</body>
+</html>

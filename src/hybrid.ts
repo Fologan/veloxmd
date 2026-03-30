@@ -40,45 +40,29 @@ export class HybridController {
   /** Set explicit px widths on all .syntax spans so CSS can transition them */
   annotateWidths(root: HTMLElement): void {
     this.resolveBaseFont(root)
-
-    const lines = root.querySelectorAll('.live-line')
-    for (const line of lines) {
-      const el = line as HTMLElement
-      // Skip exempt block types
-      if (EXEMPT_CLASSES.some(c => el.classList.contains(c))) continue
-
-      const syntaxSpans = el.querySelectorAll('.syntax') as NodeListOf<HTMLElement>
-      for (const span of syntaxSpans) {
-        const text = span.textContent || ''
-        if (!text) continue
-        const font = this.getEffectiveFont(el)
-        const w = this.measureText(text, font)
-        span.style.width = w + 'px'
-      }
-    }
+    const lines = root.querySelectorAll('.live-line') as NodeListOf<HTMLElement>
+    for (const el of lines) this.annotateLineWidths(el)
   }
 
   // ---------------------------------------------------------------------------
   // Focus change — ensure widths are set for smooth transition
   // ---------------------------------------------------------------------------
 
-  onFocusChange(root: HTMLElement, oldIdx: number, newIdx: number): void {
+  onFocusChange(root: HTMLElement, _oldIdx: number, newIdx: number): void {
+    if (newIdx < 0) return
     this.resolveBaseFont(root)
+    const newLine = root.querySelector(`[data-line="${newIdx}"]`) as HTMLElement | null
+    if (newLine) this.annotateLineWidths(newLine)
+  }
 
-    // The newly focused line needs explicit widths so the transition
-    // animates from 0 → natural width
-    if (newIdx >= 0) {
-      const newLine = root.querySelector(`[data-line="${newIdx}"]`) as HTMLElement | null
-      if (newLine && !EXEMPT_CLASSES.some(c => newLine.classList.contains(c))) {
-        const spans = newLine.querySelectorAll('.syntax') as NodeListOf<HTMLElement>
-        for (const span of spans) {
-          const text = span.textContent || ''
-          if (!text) continue
-          const font = this.getEffectiveFont(newLine)
-          const w = this.measureText(text, font)
-          span.style.width = w + 'px'
-        }
-      }
+  private annotateLineWidths(lineEl: HTMLElement): void {
+    if (EXEMPT_CLASSES.some(c => lineEl.classList.contains(c))) return
+    const font = this.getEffectiveFont(lineEl)
+    const spans = lineEl.querySelectorAll('.syntax') as NodeListOf<HTMLElement>
+    for (const span of spans) {
+      const text = span.textContent || ''
+      if (!text) continue
+      span.style.width = this.measureText(text, font) + 'px'
     }
   }
 

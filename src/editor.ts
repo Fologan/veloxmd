@@ -13,6 +13,7 @@ import { getFlatOffset, setFlatOffset } from './cursor.js'
 
 interface Snapshot {
   lines: string[]
+  text: string
   cursor: { line: number; offset: number } | null
 }
 
@@ -26,6 +27,7 @@ export class LiveEditor {
   protected focusedLine = -1
   protected viewMode: ViewMode = 'live'
   private hybrid = new HybridController()
+  private boundSelectionChange = () => this.onSelectionChange()
 
   // Undo / redo stacks
   private undoStack: Snapshot[] = []
@@ -45,11 +47,16 @@ export class LiveEditor {
     this.root.addEventListener('paste', (e) => this.onPaste(e))
     this.root.addEventListener('keydown', (e) => this.onKeyDown(e))
     this.root.addEventListener('mousedown', (e) => this.onMouseDown(e))
-    document.addEventListener('selectionchange', () => this.onSelectionChange())
+    document.addEventListener('selectionchange', this.boundSelectionChange)
 
     this.renderAll()
     this.root.focus()
     this.pushSnapshot() // initial empty state
+  }
+
+  destroy(): void {
+    document.removeEventListener('selectionchange', this.boundSelectionChange)
+    this.root.remove()
   }
 
   setValue(text: string): void {
@@ -99,14 +106,15 @@ export class LiveEditor {
   // ---------------------------------------------------------------------------
 
   private snap(cursor?: { line: number; offset: number } | null): Snapshot {
-    return { lines: [...this.lines], cursor: cursor ?? this.saveCursor() }
+    const lines = [...this.lines]
+    return { lines, text: lines.join('\n'), cursor: cursor ?? this.saveCursor() }
   }
 
   private pushSnapshot(): void {
     const s = this.snap()
     const top = this.undoStack[this.undoStack.length - 1]
     // Skip if content identical to top
-    if (top && top.lines.join('\n') === s.lines.join('\n')) return
+    if (top && top.text === s.text) return
     this.undoStack.push(s)
     if (this.undoStack.length > MAX_HISTORY) this.undoStack.shift()
   }
@@ -117,7 +125,7 @@ export class LiveEditor {
       // Enough time passed — save the pending state as an undo point
       if (this.pendingSnapshot) {
         const top = this.undoStack[this.undoStack.length - 1]
-        if (!top || top.lines.join('\n') !== this.pendingSnapshot.lines.join('\n')) {
+        if (!top || top.text !== this.pendingSnapshot.text) {
           this.undoStack.push(this.pendingSnapshot)
           if (this.undoStack.length > MAX_HISTORY) this.undoStack.shift()
         }
@@ -132,7 +140,7 @@ export class LiveEditor {
     // Flush any pending snapshot first
     if (this.pendingSnapshot) {
       const top = this.undoStack[this.undoStack.length - 1]
-      if (!top || top.lines.join('\n') !== this.pendingSnapshot.lines.join('\n')) {
+      if (!top || top.text !== this.pendingSnapshot.text) {
         this.undoStack.push(this.pendingSnapshot)
       }
       this.pendingSnapshot = null
@@ -145,7 +153,7 @@ export class LiveEditor {
     if (!prev) { this.redoStack.pop(); return }
 
     // If popped state is same as current, pop one more
-    if (prev.lines.join('\n') === this.lines.join('\n')) {
+    if (prev.text === this.lines.join('\n')) {
       const prev2 = this.undoStack.pop()
       if (!prev2) { this.undoStack.push(prev); this.redoStack.pop(); return }
       this.applySnapshot(prev2)
@@ -322,8 +330,10 @@ export class LiveEditor {
     if (!node) return null
 
     // Use child index as line number — data-line can be stale (cloned by browser on Enter)
-    const idx = Array.from(this.root.childNodes).indexOf(node as ChildNode)
-    if (idx < 0) return null
+    let idx = 0
+    let sibling: ChildNode | null = this.root.firstChild
+    while (sibling && sibling !== node) { sibling = sibling.nextSibling; idx++ }
+    if (!sibling) return null
 
     return { line: idx, offset: getFlatOffset(node, range.startContainer, range.startOffset) }
   }

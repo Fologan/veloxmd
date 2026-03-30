@@ -1,7 +1,14 @@
 import { LiveEditorPlus } from './editorPlus.js'
+import { LiveViewer } from './viewer.js'
 
 const root = document.getElementById('editor-root')!
-const editor = new LiveEditorPlus(root)
+const editor = new LiveEditorPlus(root, {
+  onChange: (text) => {
+    console.log('[onChange]', text.length, 'chars')
+    const counter = document.getElementById('char-count')
+    if (counter) counter.textContent = `${text.length} chars`
+  },
+})
 
 // Load sample button — loads full markdown reference to test all features
 const loadBtn = document.getElementById('load-sample')
@@ -64,3 +71,16 @@ viewToggle?.addEventListener('click', () => {
   editor.setViewMode(next)
   viewToggle.textContent = next === 'hybrid' ? 'Live mode' : 'Hybrid mode'
 })
+
+// Test insert() — button inserts bold marker at cursor
+const insertBtn = document.getElementById('insert-bold')
+insertBtn?.addEventListener('click', () => {
+  editor.insert('**bold text**')
+})
+
+// Test LiveViewer — static read-only render
+const viewerRoot = document.getElementById('viewer-root')
+if (viewerRoot) {
+  const viewer = new LiveViewer(viewerRoot)
+  viewer.setValue('# Static Viewer\n\nThis is **read-only**. No cursor, no editing, no overhead.\n\n- [x] Zero event listeners\n- [x] Same CSS styling\n- [ ] Try clicking — nothing happens')
+}

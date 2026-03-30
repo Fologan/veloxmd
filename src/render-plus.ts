@@ -5,108 +5,58 @@
 import type { LiveSegment, LiveLine } from './types.js'
 import { createSegmentNode, renderLineElement } from './render.js'
 
+/** Segment kinds that map to a simple <span class="..."> */
+const SPAN_CLASS: Record<string, string> = {
+  'autolink': 'live-autolink',
+  'footnote-label': 'live-footnote-label',
+  'ref-link-text': 'live-link-text',
+  'ref-link-label': 'live-ref-label',
+  'link-title': 'live-link-title',
+  'html-tag': 'live-html-tag',
+  'math-inline': 'live-math',
+  'hard-break': 'live-hard-break',
+  'image-alt': 'live-image-alt',
+  'image-url': 'live-link-url',
+}
+
+/** Segment kinds that map to a semantic HTML element */
+const ELEMENT_KIND: Record<string, { tag: string; className?: string }> = {
+  'footnote-ref': { tag: 'sup', className: 'live-footnote-ref' },
+  'highlight': { tag: 'mark' },
+  'keyboard': { tag: 'kbd' },
+  'underline': { tag: 'u' },
+  'superscript': { tag: 'sup' },
+  'subscript': { tag: 'sub' },
+}
+
 export function createSegmentNodePlus(seg: LiveSegment): Node {
-  switch (seg.kind) {
-    case 'task-checkbox': {
-      const el = document.createElement('span')
-      el.className = seg.text === 'x' ? 'live-checkbox live-checked' : 'live-checkbox'
-      el.textContent = seg.text
-      return el
-    }
-    case 'autolink': {
-      const el = document.createElement('span')
-      el.className = 'live-autolink'
-      el.textContent = seg.text
-      return el
-    }
-    case 'footnote-ref': {
-      const el = document.createElement('sup')
-      el.className = 'live-footnote-ref'
-      el.textContent = seg.text
-      return el
-    }
-    case 'footnote-label': {
-      const el = document.createElement('span')
-      el.className = 'live-footnote-label'
-      el.textContent = seg.text
-      return el
-    }
-    case 'ref-link-text': {
-      const el = document.createElement('span')
-      el.className = 'live-link-text'
-      el.textContent = seg.text
-      return el
-    }
-    case 'ref-link-label': {
-      const el = document.createElement('span')
-      el.className = 'live-ref-label'
-      el.textContent = seg.text
-      return el
-    }
-    case 'link-title': {
-      const el = document.createElement('span')
-      el.className = 'live-link-title'
-      el.textContent = seg.text
-      return el
-    }
-    case 'html-tag': {
-      const el = document.createElement('span')
-      el.className = 'live-html-tag'
-      el.textContent = seg.text
-      return el
-    }
-    case 'highlight': {
-      const el = document.createElement('mark')
-      el.textContent = seg.text
-      return el
-    }
-    case 'keyboard': {
-      const el = document.createElement('kbd')
-      el.textContent = seg.text
-      return el
-    }
-    case 'underline': {
-      const el = document.createElement('u')
-      el.textContent = seg.text
-      return el
-    }
-    case 'superscript': {
-      const el = document.createElement('sup')
-      el.textContent = seg.text
-      return el
-    }
-    case 'subscript': {
-      const el = document.createElement('sub')
-      el.textContent = seg.text
-      return el
-    }
-    case 'math-inline': {
-      const el = document.createElement('span')
-      el.className = 'live-math'
-      el.textContent = seg.text
-      return el
-    }
-    case 'hard-break': {
-      const el = document.createElement('span')
-      el.className = 'live-hard-break'
-      el.textContent = seg.text
-      return el
-    }
-    case 'image-alt': {
-      const el = document.createElement('span')
-      el.className = 'live-image-alt'
-      el.textContent = seg.text
-      return el
-    }
-    case 'image-url': {
-      const el = document.createElement('span')
-      el.className = 'live-link-url'
-      el.textContent = seg.text
-      return el
-    }
-    default:
-      return createSegmentNode(seg)
+  // Simple span cases
+  const spanCls = SPAN_CLASS[seg.kind]
+  if (spanCls) {
+    const el = document.createElement('span')
+    el.className = spanCls
+    el.textContent = seg.text
+    return el
   }
+
+  // Semantic element cases
+  const elemDef = ELEMENT_KIND[seg.kind]
+  if (elemDef) {
+    const el = document.createElement(elemDef.tag)
+    if (elemDef.className) el.className = elemDef.className
+    el.textContent = seg.text
+    return el
+  }
+
+  // Special: task checkbox has conditional class
+  if (seg.kind === 'task-checkbox') {
+    const el = document.createElement('span')
+    el.className = seg.text === 'x' ? 'live-checkbox live-checked' : 'live-checkbox'
+    el.textContent = seg.text
+    return el
+  }
+
+  return createSegmentNode(seg)
 }
 
 export function renderLineElementPlus(line: LiveLine, index: number): HTMLElement {
@@ -144,9 +94,6 @@ export function renderLineElementPlus(line: LiveLine, index: number): HTMLElemen
       break
     case 'details-summary':
       div.classList.add('live-details-summary')
-      break
-    case 'details-line':
-      div.classList.add('live-details-line')
       break
   }
 

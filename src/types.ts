@@ -25,12 +25,9 @@ export type BlockTypePlus =
   | 'alt-heading'
   | 'alt-heading-marker'
   | 'footnote-def'
-  | 'definition-term'
-  | 'definition-desc'
   | 'html-comment'
   | 'details-open'
   | 'details-summary'
-  | 'details-line'
   | 'details-close'
 
 /** Inline segment kinds (base) */
@@ -89,8 +86,6 @@ export type ViewMode = 'live' | 'hybrid'
 export interface ParseState {
   inCodeBlock: boolean
   inTable: boolean
-  inDetails: boolean
   inMathBlock: boolean
-  tableColumnCount: number
   tableAlignments: ('left' | 'center' | 'right' | 'default')[]
 }

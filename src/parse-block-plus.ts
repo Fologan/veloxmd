@@ -10,9 +10,7 @@ function createState(): ParseState {
   return {
     inCodeBlock: false,
     inTable: false,
-    inDetails: false,
     inMathBlock: false,
-    tableColumnCount: 0,
     tableAlignments: [],
   }
 }
@@ -45,10 +43,6 @@ function parseAlignments(line: string): ('left' | 'center' | 'right' | 'default'
     if (left) return 'left'
     return 'default'
   })
-}
-
-function countColumns(line: string): number {
-  return line.split('|').filter(c => c.trim()).length
 }
 
 export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
@@ -111,12 +105,10 @@ export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
 
     // --- Details blocks ---
     if (trimmed === '<details>' || trimmed.startsWith('<details ')) {
-      state.inDetails = true
       result.push({ raw, blockType: 'details-open', segments: [{ text: raw, kind: 'html-tag' }] })
       continue
     }
     if (trimmed === '</details>') {
-      state.inDetails = false
       result.push({ raw, blockType: 'details-close', segments: [{ text: raw, kind: 'html-tag' }] })
       continue
     }
@@ -149,7 +141,6 @@ export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
     // Detect table start: a pipe-containing line followed by a separator line
     if (!state.inTable && trimmed.includes('|') && li + 1 < rawLines.length && isTableSeparator(rawLines[li + 1])) {
       state.inTable = true
-      state.tableColumnCount = countColumns(raw)
       result.push({ raw, blockType: 'table-header', segments: parseTableCells(raw) })
       continue
     }

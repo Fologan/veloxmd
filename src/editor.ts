@@ -35,6 +35,9 @@ export class LiveEditor {
   private boundSelectionChange = () => this.onSelectionChange()
   private changeCallback: ((text: string) => void) | null = null
 
+  private prevLines: string[] = ['']
+  private prevParsed: LiveLine[] = []
+
   // Undo / redo stacks
   private undoStack: Snapshot[] = []
   private redoStack: Snapshot[] = []
@@ -232,7 +235,9 @@ export class LiveEditor {
     const cursor = this.saveCursor()
     this.readLines()
     this.recordChange()
-    this.renderAll()
+    if (!this.renderIncremental()) {
+      this.renderAll()
+    }
     if (cursor) this.restoreCursor(cursor)
     this.emitChange()
   }
@@ -411,6 +416,155 @@ export class LiveEditor {
   }
 
   // ---------------------------------------------------------------------------
+  // Incremental render
+  // ---------------------------------------------------------------------------
+
+  protected onIncrementalRender(_startIdx: number, _endIdx: number): void {
+    // Override in LiveEditorPlus to handle details blocks for the affected range
+  }
+
+  private static isMultiLineBlockType(bt: string): boolean {
+    switch (bt) {
+      case 'code-block-open':
+      case 'code-block-line':
+      case 'code-block-close':
+      case 'table-header':
+      case 'table-separator':
+      case 'table-row':
+      case 'details-open':
+      case 'details-summary':
+      case 'details-close':
+        return true
+      default:
+        return false
+    }
+  }
+
+  private static isTableType(bt: string): boolean {
+    return bt === 'table-header' || bt === 'table-separator' || bt === 'table-row'
+  }
+
+  private findBlockRange(parsed: LiveLine[], lineIdx: number): [number, number] {
+    const bt = parsed[lineIdx].blockType
+
+    if (!LiveEditor.isMultiLineBlockType(bt)) {
+      return [lineIdx, lineIdx + 1]
+    }
+
+    if (bt === 'code-block-open' || bt === 'code-block-line' || bt === 'code-block-close') {
+      let start = lineIdx
+      while (start > 0 && parsed[start].blockType !== 'code-block-open') start--
+      let end = lineIdx
+      while (end < parsed.length - 1 && parsed[end].blockType !== 'code-block-close') end++
+      return [start, end + 1]
+    }
+
+    if (bt === 'table-header' || bt === 'table-separator' || bt === 'table-row') {
+      let start = lineIdx
+      while (start > 0 && LiveEditor.isTableType(parsed[start - 1].blockType)) start--
+      let end = lineIdx
+      while (end < parsed.length - 1 && LiveEditor.isTableType(parsed[end + 1].blockType)) end++
+      return [start, end + 1]
+    }
+
+    if (bt === 'details-open' || bt === 'details-summary' || bt === 'details-close') {
+      let start = lineIdx
+      while (start > 0 && parsed[start].blockType !== 'details-open') start--
+      let end = lineIdx
+      while (end < parsed.length - 1 && parsed[end].blockType !== 'details-close') end++
+      return [start, end + 1]
+    }
+
+    return [lineIdx, lineIdx + 1]
+  }
+
+  private renderIncremental(): boolean {
+    const oldLines = this.prevLines
+    const newLines = this.lines
+    const oldLen = oldLines.length
+    const newLen = newLines.length
+
+    // Line count changed — browser modified DOM structure (Enter/Delete),
+    // DOM child indices and old line indices are out of sync, fallback
+    if (oldLen !== newLen) return false
+
+    // Find first differing line
+    let topDiff = 0
+    while (topDiff < oldLen && oldLines[topDiff] === newLines[topDiff]) topDiff++
+
+    if (topDiff === oldLen) return true
+
+    // Find last differing line
+    let botDiff = oldLen - 1
+    while (botDiff > topDiff && oldLines[botDiff] === newLines[botDiff]) botDiff--
+
+    // Parse full document for correct block context
+    const newParsed = this.parseDocument(newLines)
+
+    const oldParsed = this.prevParsed
+    if (oldParsed.length !== oldLen) return false
+
+    // Verify block types unchanged outside the diff range
+    for (let i = 0; i < topDiff; i++) {
+      if (newParsed[i].blockType !== oldParsed[i].blockType) return false
+    }
+    for (let i = botDiff + 1; i < oldLen; i++) {
+      if (newParsed[i].blockType !== oldParsed[i].blockType) return false
+    }
+
+    // Expand changed range to full block boundaries
+    let blockStart = topDiff
+    let blockEnd = botDiff + 1
+    for (let i = topDiff; i <= botDiff; i++) {
+      const [bs, be] = this.findBlockRange(newParsed, i)
+      if (bs < blockStart) blockStart = bs
+      if (be > blockEnd) blockEnd = be
+    }
+    for (let i = topDiff; i <= botDiff; i++) {
+      if (i < oldParsed.length) {
+        const [bs, be] = this.findBlockRange(oldParsed, i)
+        if (bs < blockStart) blockStart = bs
+        if (be > blockEnd) blockEnd = be
+      }
+    }
+
+    blockStart = Math.max(0, blockStart)
+    blockEnd = Math.min(newParsed.length, blockEnd)
+
+    // Build new DOM nodes for the block range
+    this.rendering = true
+    const frag = document.createDocumentFragment()
+    for (let i = blockStart; i < blockEnd; i++) {
+      const el = this.renderLine(newParsed[i], i)
+      if (i === this.focusedLine) el.classList.add('focused')
+      frag.appendChild(el)
+    }
+
+    // Remove old DOM children in the range and insert new ones
+    const children = this.root.childNodes
+    const swapCount = blockEnd - blockStart
+    for (let r = 0; r < swapCount; r++) {
+      if (blockStart < children.length) {
+        this.root.removeChild(children[blockStart])
+      }
+    }
+    const refNode = children[blockStart] || null
+    this.root.insertBefore(frag, refNode)
+
+    if (this.viewMode === 'hybrid') {
+      this.hybrid.annotateBlockWidths(this.root, blockStart, blockEnd)
+    }
+
+    this.prevLines = [...newLines]
+    this.prevParsed = newParsed
+
+    this.onIncrementalRender(blockStart, blockEnd)
+
+    this.rendering = false
+    return true
+  }
+
+  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
@@ -430,6 +584,10 @@ export class LiveEditor {
     if (this.viewMode === 'hybrid') {
       this.hybrid.annotateWidths(this.root)
     }
+
+    this.prevLines = [...this.lines]
+    this.prevParsed = parsed
+
     this.rendering = false
   }
 }

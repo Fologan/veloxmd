@@ -44,6 +44,15 @@ export class HybridController {
     for (const el of lines) this.annotateLineWidths(el)
   }
 
+  /** Annotate widths only for lines in [startLine, endLine) */
+  annotateBlockWidths(root: HTMLElement, startLine: number, endLine: number): void {
+    this.resolveBaseFont(root)
+    for (let i = startLine; i < endLine; i++) {
+      const el = root.querySelector(`[data-line="${i}"]`) as HTMLElement | null
+      if (el) this.annotateLineWidths(el)
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Focus change — ensure widths are set for smooth transition
   // ---------------------------------------------------------------------------

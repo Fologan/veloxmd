@@ -10,6 +10,7 @@ import { HybridController } from './hybrid.js'
 import { parseLiveDocument } from './parse-block.js'
 import { createSegmentNode, renderLineElement } from './render.js'
 import { getFlatOffset, setFlatOffset } from './cursor.js'
+import { Toolbar } from './toolbar.js'
 
 interface Snapshot {
   lines: string[]
@@ -23,6 +24,7 @@ const MERGE_WINDOW = 400 // ms — consecutive typing merges into one undo entry
 export interface EditorOptions {
   onChange?: (text: string) => void
   placeholder?: string
+  toolbar?: boolean
 }
 
 export class LiveEditor {
@@ -31,6 +33,8 @@ export class LiveEditor {
   protected rendering = false
   protected focusedLine = -1
   protected viewMode: ViewMode = 'source'
+  private wrapper: HTMLDivElement
+  private toolbar?: Toolbar
   private hybrid = new HybridController()
   private boundSelectionChange = () => this.onSelectionChange()
   private changeCallback: ((text: string) => void) | null = null
@@ -45,12 +49,18 @@ export class LiveEditor {
   private pendingSnapshot: Snapshot | null = null
 
   constructor(container: HTMLElement, options?: EditorOptions) {
+    this.wrapper = document.createElement('div')
+    this.wrapper.className = 'fastmd-wrapper'
+    container.appendChild(this.wrapper)
+
     this.root = document.createElement('div')
     this.root.className = 'live-editor'
     this.root.contentEditable = 'true'
     this.root.spellcheck = false
     this.root.setAttribute('data-placeholder', options?.placeholder ?? 'Start typing markdown\u2026')
-    container.appendChild(this.root)
+    this.wrapper.appendChild(this.root)
+
+    if (options?.toolbar) this.toolbar = new Toolbar(this, this.wrapper)
     if (options?.onChange) this.changeCallback = options.onChange
 
     this.root.addEventListener('input', () => this.onInput())
@@ -65,8 +75,9 @@ export class LiveEditor {
   }
 
   destroy(): void {
+    this.toolbar?.destroy()
     document.removeEventListener('selectionchange', this.boundSelectionChange)
-    this.root.remove()
+    this.wrapper.remove()
   }
 
   setValue(text: string): void {
@@ -129,6 +140,140 @@ export class LiveEditor {
     this.emitChange()
   }
 
+  toggleInline(before: string, after: string, placeholder: string): void {
+    if (!this.root.contains(document.activeElement) && document.activeElement !== this.root) {
+      this.root.focus()
+    }
+
+    const sel = window.getSelection()
+    if (!sel) return
+
+    const hasSelection = sel.rangeCount > 0 && !sel.isCollapsed
+
+    if (hasSelection) {
+      const range = sel.getRangeAt(0)
+      if (!this.root.contains(range.startContainer) || !this.root.contains(range.endContainer)) return
+
+      const startPos = this._rangeEndpointToLineOffset(range.startContainer, range.startOffset)
+      if (!startPos) return
+      const endPos = this._rangeEndpointToLineOffset(range.endContainer, range.endOffset)
+      if (!endPos) return
+
+      this.pushSnapshot()
+
+      const startFlat = this._lineOffsetToFlat(startPos.line, startPos.offset)
+      const endFlat = this._lineOffsetToFlat(endPos.line, endPos.offset)
+      if (startFlat === null || endFlat === null) return
+
+      const flatStart = Math.min(startFlat, endFlat)
+      const flatEnd = Math.max(startFlat, endFlat)
+
+      const fullText = this.getValue()
+      const selectedText = fullText.slice(flatStart, flatEnd)
+      const newText = fullText.slice(0, flatStart) + before + selectedText + after + fullText.slice(flatEnd)
+      this.lines = newText.split('\n')
+
+      const cursorFlat = flatStart + before.length + selectedText.length + after.length
+      const cursorPos = this._flatToLineOffset(cursorFlat)
+
+      this.renderAll()
+      this.redoStack.length = 0
+      if (cursorPos) this.restoreCursor(cursorPos)
+      this.emitChange()
+    } else {
+      let cursor = this.saveCursor()
+      if (!cursor) {
+        this.root.focus()
+        cursor = { line: 0, offset: 0 }
+      }
+
+      this.pushSnapshot()
+
+      const insertText = before + placeholder + after
+      const cursorFlat = this._lineOffsetToFlat(cursor.line, cursor.offset)
+      if (cursorFlat === null) return
+
+      const fullText = this.getValue()
+      this.lines = (fullText.slice(0, cursorFlat) + insertText + fullText.slice(cursorFlat)).split('\n')
+
+      const placeholderStart = this._flatToLineOffset(cursorFlat + before.length)
+      const placeholderEnd = this._flatToLineOffset(cursorFlat + before.length + placeholder.length)
+
+      this.renderAll()
+      this.redoStack.length = 0
+
+      if (placeholderStart && placeholderEnd) {
+        this._restoreCursorRange(placeholderStart, placeholderEnd)
+      } else if (placeholderStart) {
+        this.restoreCursor(placeholderStart)
+      }
+
+      this.emitChange()
+    }
+  }
+
+  toggleBlock(prefix: string): void {
+    let cursor = this.saveCursor()
+    if (!cursor) {
+      this.root.focus()
+      cursor = this.saveCursor()
+      if (!cursor) cursor = { line: 0, offset: 0 }
+    }
+
+    const lineIdx = Math.max(0, Math.min(cursor.line, this.lines.length - 1))
+    const originalLine = this.lines[lineIdx] ?? ''
+
+    this.pushSnapshot()
+
+    let newLine: string
+    let offsetDelta = 0
+
+    if (prefix === '') {
+      const headingMatch = originalLine.match(/^(#{1,6}\s)/)
+      if (headingMatch) {
+        newLine = originalLine.slice(headingMatch[1].length)
+        offsetDelta = -headingMatch[1].length
+      } else {
+        newLine = originalLine
+      }
+    } else if (prefix.startsWith('#')) {
+      const headingMatch = originalLine.match(/^(#{1,6}\s)/)
+      if (headingMatch) {
+        const existingPrefix = headingMatch[1]
+        if (existingPrefix === prefix) {
+          newLine = originalLine.slice(existingPrefix.length)
+          offsetDelta = -existingPrefix.length
+        } else {
+          newLine = prefix + originalLine.slice(existingPrefix.length)
+          offsetDelta = prefix.length - existingPrefix.length
+        }
+      } else {
+        newLine = prefix + originalLine
+        offsetDelta = prefix.length
+      }
+    } else {
+      if (originalLine.startsWith(prefix)) {
+        newLine = originalLine.slice(prefix.length)
+        offsetDelta = -prefix.length
+      } else {
+        newLine = prefix + originalLine
+        offsetDelta = prefix.length
+      }
+    }
+
+    this.lines[lineIdx] = newLine
+    const newOffset = Math.max(0, Math.min(cursor.offset + offsetDelta, newLine.length))
+
+    this.renderAll()
+    this.redoStack.length = 0
+    this.restoreCursor({ line: lineIdx, offset: newOffset })
+    this.emitChange()
+  }
+
+  insertTemplate(template: string): void {
+    this.insert(template)
+  }
+
   // ---------------------------------------------------------------------------
   // Extension points — override in LiveEditorPlus
   // ---------------------------------------------------------------------------
@@ -180,7 +325,7 @@ export class LiveEditor {
     this.redoStack.length = 0
   }
 
-  protected undo(): void {
+  public undo(): void {
     // Flush any pending snapshot first
     if (this.pendingSnapshot) {
       const top = this.undoStack[this.undoStack.length - 1]
@@ -206,7 +351,7 @@ export class LiveEditor {
     }
   }
 
-  protected redo(): void {
+  public redo(): void {
     const next = this.redoStack.pop()
     if (!next) return
 
@@ -311,6 +456,83 @@ export class LiveEditor {
       this.redo()
       return
     }
+
+    // Bold: Ctrl+B / Cmd+B
+    if (e.key === 'b' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      this.toggleInline('**', '**', 'bold')
+      return
+    }
+
+    // Italic: Ctrl+I / Cmd+I
+    if (e.key === 'i' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      this.toggleInline('*', '*', 'italic')
+      return
+    }
+
+    // Underline: Ctrl+U / Cmd+U
+    if (e.key === 'u' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      this.toggleInline('<u>', '</u>', 'underline')
+      return
+    }
+
+    // Strikethrough: Ctrl+Shift+X / Cmd+Shift+X
+    if (e.key === 'X' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.toggleInline('~~', '~~', 'strikethrough')
+      return
+    }
+
+    // Code inline: Ctrl+E / Cmd+E
+    if (e.key === 'e' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      this.toggleInline('`', '`', 'code')
+      return
+    }
+
+    // Link: Ctrl+K / Cmd+K
+    if (e.key === 'k' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      this.insertTemplate('[link text](url)')
+      return
+    }
+
+    // Code block: Ctrl+Shift+K / Cmd+Shift+K
+    if (e.key === 'K' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.insertTemplate('```\ncode\n```')
+      return
+    }
+
+    // Blockquote: Ctrl+Shift+Q / Cmd+Shift+Q
+    if (e.key === 'Q' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.toggleBlock('> ')
+      return
+    }
+
+    // Ordered list: Ctrl+Shift+O / Cmd+Shift+O
+    if (e.key === 'O' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.toggleBlock('1. ')
+      return
+    }
+
+    // Unordered list: Ctrl+Shift+U / Cmd+Shift+U
+    if (e.key === 'U' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.toggleBlock('- ')
+      return
+    }
+
+    // Horizontal rule: Ctrl+Shift+H / Cmd+Shift+H
+    if (e.key === 'H' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+      e.preventDefault()
+      this.insertTemplate('\n---\n')
+      return
+    }
   }
 
   protected onMouseDown(e: MouseEvent): void {
@@ -413,6 +635,71 @@ export class LiveEditor {
       n = n.parentNode
     }
     return null
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internal cursor / offset utilities
+  // ---------------------------------------------------------------------------
+
+  private _rangeEndpointToLineOffset(
+    node: Node,
+    domOffset: number
+  ): { line: number; offset: number } | null {
+    if (!this.root.contains(node)) return null
+    let lineNode: Node | null = node
+    while (lineNode && lineNode.parentNode !== this.root) lineNode = lineNode.parentNode
+    if (!lineNode) return null
+
+    let lineIdx = 0
+    let sibling: ChildNode | null = this.root.firstChild
+    while (sibling && sibling !== lineNode) { sibling = sibling.nextSibling; lineIdx++ }
+    if (!sibling) return null
+
+    return { line: lineIdx, offset: getFlatOffset(lineNode, node, domOffset) }
+  }
+
+  private _lineOffsetToFlat(line: number, offset: number): number | null {
+    if (this.lines.length === 0) return 0
+    if (line < 0 || line >= this.lines.length) return null
+    let flat = 0
+    for (let i = 0; i < line; i++) flat += this.lines[i].length + 1
+    flat += Math.min(offset, this.lines[line].length)
+    return flat
+  }
+
+  private _flatToLineOffset(flat: number): { line: number; offset: number } | null {
+    if (this.lines.length === 0) return { line: 0, offset: 0 }
+    let remaining = Math.max(0, flat)
+    for (let i = 0; i < this.lines.length; i++) {
+      const lineLen = this.lines[i].length
+      if (remaining <= lineLen) return { line: i, offset: remaining }
+      remaining -= lineLen + 1
+    }
+    const lastLine = this.lines.length - 1
+    return { line: lastLine, offset: this.lines[lastLine].length }
+  }
+
+  private _restoreCursorRange(
+    startPos: { line: number; offset: number },
+    endPos: { line: number; offset: number }
+  ): void {
+    const startEl = this.root.querySelector(`[data-line="${startPos.line}"]`)
+    const endEl = this.root.querySelector(`[data-line="${endPos.line}"]`)
+    if (!startEl || !endEl) return
+
+    const startDom = setFlatOffset(startEl, startPos.offset)
+    const endDom = setFlatOffset(endEl, endPos.offset)
+    if (!startDom || !endDom) return
+
+    const sel = window.getSelection()
+    if (!sel) return
+    try {
+      const range = document.createRange()
+      range.setStart(startDom.node, startDom.offset)
+      range.setEnd(endDom.node, endDom.offset)
+      sel.removeAllRanges()
+      sel.addRange(range)
+    } catch { /* best-effort */ }
   }
 
   // ---------------------------------------------------------------------------

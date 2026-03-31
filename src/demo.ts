@@ -82,6 +82,7 @@ Thanks to everyone who made this release possible. Special mention to the docs t
 
 const root = document.getElementById('editor-root')!
 const editor = new LiveEditorPlus(root, {
+  toolbar: true,
   onChange: (text) => {
     const counter = document.getElementById('char-count')
     if (counter) counter.textContent = `${text.length} chars`
@@ -117,9 +118,14 @@ insertBtn?.addEventListener('click', () => {
   editor.insert('**bold text**')
 })
 
-// Static viewer demo
+// Static viewer demo — synced with editor
 const viewerRoot = document.getElementById('viewer-root')
 if (viewerRoot) {
   const viewer = new LiveViewer(viewerRoot)
   viewer.setValue(DEFAULT_DOC)
+  editor.onChange((text) => {
+    const counter = document.getElementById('char-count')
+    if (counter) counter.textContent = `${text.length} chars`
+    viewer.setValue(text)
+  })
 }

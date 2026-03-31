@@ -7,6 +7,9 @@ export { LiveEditor } from './editor.js'
 export type { EditorOptions } from './editor.js'
 export { LiveEditorPlus } from './editorPlus.js'
 
+// Toolbar
+export { Toolbar } from './toolbar.js'
+
 // Viewer (static read-only)
 export { LiveViewer } from './viewer.js'
 

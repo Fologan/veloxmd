@@ -22,6 +22,17 @@
   --fastmd-purple: #8250df;
   --fastmd-red: #cf222e;
   --fastmd-orange: #bc4c00;
+
+  /* Toolbar */
+  --fastmd-toolbar-bg: #ffffff;
+  --fastmd-toolbar-border: #e1e4e8;
+  --fastmd-toolbar-text: #24292e;
+  --fastmd-toolbar-button-hover: #f0f1f3;
+  --fastmd-toolbar-button-active: #e1e4e8;
+  --fastmd-toolbar-separator: #d1d5da;
+  --fastmd-toolbar-radius: 6px;
+  --fastmd-toolbar-dropdown-bg: #ffffff;
+  --fastmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 /* Dark theme — add [data-theme="dark"] to any ancestor or :root */
@@ -40,6 +51,16 @@
   --fastmd-purple: #d2a8ff;
   --fastmd-red: #ff7b72;
   --fastmd-orange: #ffa657;
+
+  /* Toolbar */
+  --fastmd-toolbar-bg: #1e1e1e;
+  --fastmd-toolbar-border: #333333;
+  --fastmd-toolbar-text: #d4d4d4;
+  --fastmd-toolbar-button-hover: #2a2a2a;
+  --fastmd-toolbar-button-active: #333333;
+  --fastmd-toolbar-separator: #444444;
+  --fastmd-toolbar-dropdown-bg: #252525;
+  --fastmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* ---- Live Editor ---- */
@@ -79,8 +100,8 @@
    They "activate" (brighten) when the cursor is on their line. */
 
 .live-line .syntax {
-  color: var(--fastmd-syntax);
-  opacity: 0.3;
+  color: var(--fastmd-text-muted);
+  opacity: 0.7;
   transition: opacity 0.2s ease, color 0.2s ease;
   font-weight: normal;
   font-style: normal;
@@ -88,7 +109,7 @@
 }
 
 .live-line.focused .syntax {
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 /* ---- Hybrid mode — syntax collapses on unfocused lines ---- */
@@ -154,11 +175,11 @@
 .live-h5 { font-size: 1em; font-weight: 600; color: var(--fastmd-text-bright); }
 .live-h6 { font-size: 0.95em; font-weight: 600; color: var(--fastmd-text-muted); }
 
-/* Heading syntax markers are smaller */
+/* Heading syntax markers */
 .live-h1 .syntax,
 .live-h2 .syntax,
 .live-h3 .syntax {
-  font-size: 0.55em;
+  font-size: 0.75em;
   vertical-align: middle;
 }
 
@@ -564,4 +585,208 @@
 .live-static .live-checked::after {
   font-size: 16px;
   content: '\2611';
+}
+
+/* =========================================================================
+   FastMD — Toolbar Styles
+   ========================================================================= */
+
+/* ---- Wrapper ---- */
+
+.fastmd-wrapper {
+  display: flex;
+  flex-direction: column;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+/* ---- Toolbar bar ---- */
+
+.fastmd-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--fastmd-toolbar-bg);
+  border-bottom: 1px solid var(--fastmd-toolbar-border);
+  padding: 6px 8px;
+  gap: 2px;
+  user-select: none;
+}
+
+/* ---- Toolbar group ---- */
+
+.fastmd-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+/* ---- Toolbar button ---- */
+
+.fastmd-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--fastmd-toolbar-text);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.fastmd-toolbar-btn:hover {
+  background: var(--fastmd-toolbar-button-hover);
+}
+
+.fastmd-toolbar-btn:active {
+  background: var(--fastmd-toolbar-button-active);
+}
+
+.fastmd-toolbar-btn:focus-visible {
+  outline: 2px solid var(--fastmd-accent);
+  outline-offset: 1px;
+}
+
+.fastmd-toolbar-btn:disabled,
+.fastmd-toolbar-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---- Button inline text styling ---- */
+
+.fastmd-toolbar-btn b { font-weight: 700; }
+.fastmd-toolbar-btn i { font-style: italic; }
+.fastmd-toolbar-btn u { text-decoration: underline; }
+.fastmd-toolbar-btn s { text-decoration: line-through; }
+
+/* ---- Toolbar separator ---- */
+
+.fastmd-toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--fastmd-toolbar-separator);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ---- Dropdown and overflow containers ---- */
+
+.fastmd-toolbar-dropdown,
+.fastmd-toolbar-overflow {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ---- Dropdown menu and overflow menu (shared base) ---- */
+
+.fastmd-toolbar-dropdown-menu,
+.fastmd-toolbar-overflow-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  flex-direction: column;
+  background: var(--fastmd-toolbar-dropdown-bg);
+  border: 1px solid var(--fastmd-toolbar-border);
+  box-shadow: var(--fastmd-toolbar-dropdown-shadow);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 140px;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.fastmd-toolbar-dropdown.open > .fastmd-toolbar-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Dropdown menu items ---- */
+
+.fastmd-toolbar-dropdown-menu [role="menuitem"],
+.fastmd-toolbar-overflow-menu [role="menuitem"] {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--fastmd-toolbar-text);
+  transition: background 0.12s ease;
+}
+
+.fastmd-toolbar-dropdown-menu [role="menuitem"]:hover,
+.fastmd-toolbar-overflow-menu [role="menuitem"]:hover {
+  background: var(--fastmd-toolbar-button-hover);
+}
+
+.fastmd-toolbar-dropdown-menu [role="menuitem"]:focus-visible,
+.fastmd-toolbar-overflow-menu [role="menuitem"]:focus-visible {
+  outline: 2px solid var(--fastmd-accent);
+  outline-offset: 1px;
+}
+
+/* ---- Heading dropdown — font size progression ---- */
+
+[data-action="heading-0"] { font-size: 14px; }
+[data-action="heading-1"] { font-size: 1.4em; font-weight: 700; }
+[data-action="heading-2"] { font-size: 1.2em; font-weight: 700; }
+[data-action="heading-3"] { font-size: 1.05em; font-weight: 600; }
+[data-action="heading-4"] { font-size: 0.95em; font-weight: 600; }
+[data-action="heading-5"] { font-size: 0.85em; font-weight: 600; }
+[data-action="heading-6"] { font-size: 0.8em; font-weight: 600; }
+
+/* ---- Overflow menu ---- */
+
+.fastmd-toolbar-overflow {
+  display: none;
+}
+
+.fastmd-toolbar-overflow-menu {
+  right: 0;
+  left: auto;
+}
+
+/* ---- Responsive — small screens ---- */
+
+@media (max-width: 480px) {
+  .fastmd-toolbar {
+    padding: 4px 6px;
+    gap: 1px;
+  }
+
+  .fastmd-toolbar-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+/* ---- Accessibility — reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .fastmd-toolbar-btn,
+  .fastmd-toolbar-dropdown-menu [role="menuitem"],
+  .fastmd-toolbar-overflow-menu [role="menuitem"] {
+    transition: none;
+  }
+}
+
+/* ---- Print ---- */
+
+@media print {
+  .fastmd-toolbar {
+    display: none;
+  }
 }

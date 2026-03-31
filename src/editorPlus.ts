@@ -29,21 +29,31 @@ export class LiveEditorPlus extends LiveEditor {
     this.setupDetailsBlocks()
   }
 
+  protected override onIncrementalRender(startIdx: number, endIdx: number): void {
+    this.setupDetailsBlocksInRange(startIdx, endIdx)
+  }
+
   private setupDetailsBlocks(): void {
     const allLines = Array.from(this.root.querySelectorAll('.live-line')) as HTMLElement[]
-    let i = 0
+    this.setupDetailsInElements(allLines, 0, allLines.length)
+  }
 
-    while (i < allLines.length) {
+  private setupDetailsBlocksInRange(startIdx: number, endIdx: number): void {
+    const allLines = Array.from(this.root.querySelectorAll('.live-line')) as HTMLElement[]
+    this.setupDetailsInElements(allLines, startIdx, endIdx)
+  }
+
+  private setupDetailsInElements(allLines: HTMLElement[], scanStart: number, scanEnd: number): void {
+    let i = scanStart
+
+    while (i < scanEnd && i < allLines.length) {
       const line = allLines[i]
 
-      // Find <details> open
       if (line.classList.contains('live-details-fence') && line.textContent?.trim().startsWith('<details')) {
-        const openLine = line
         let summaryLine: HTMLElement | null = null
         let closeLine: HTMLElement | null = null
         const contentLines: HTMLElement[] = []
 
-        // Scan forward for summary, content, and close
         let j = i + 1
         while (j < allLines.length) {
           const cur = allLines[j]
@@ -62,14 +72,12 @@ export class LiveEditorPlus extends LiveEditor {
           const key = summaryLine.dataset.line || String(i)
           const isExpanded = this.expandedDetails.has(key)
 
-          // Add toggle indicator to summary line
           const toggle = document.createElement('span')
           toggle.contentEditable = 'false'
           toggle.className = 'live-details-toggle'
           toggle.textContent = isExpanded ? '▼ ' : '▶ '
           summaryLine.insertBefore(toggle, summaryLine.firstChild)
 
-          // Apply collapsed/expanded state to content lines
           for (const cl of contentLines) {
             cl.classList.add('live-details-content')
             if (!isExpanded) {
@@ -77,12 +85,10 @@ export class LiveEditorPlus extends LiveEditor {
             }
           }
 
-          // Also hide/show close fence when collapsed
           if (!isExpanded) {
             closeLine.style.display = 'none'
           }
 
-          // Click handler on toggle indicator
           const savedKey = key
           const savedContentLines = contentLines
           const savedCloseLine = closeLine

@@ -113,7 +113,17 @@ export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
       continue
     }
     if (trimmed.startsWith('<summary>')) {
-      result.push({ raw, blockType: 'details-summary', segments: [{ text: raw, kind: 'html-tag' }] })
+      const match = raw.match(/^(\s*<summary>)(.*?)(<\/summary>\s*)$/)
+      if (match) {
+        const segments: LiveSegment[] = [
+          { text: match[1], kind: 'html-tag' },
+        ]
+        if (match[2]) segments.push({ text: match[2], kind: 'text' })
+        segments.push({ text: match[3], kind: 'html-tag' })
+        result.push({ raw, blockType: 'details-summary', segments })
+      } else {
+        result.push({ raw, blockType: 'details-summary', segments: [{ text: raw, kind: 'html-tag' }] })
+      }
       continue
     }
 

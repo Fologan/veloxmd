@@ -44,6 +44,7 @@ export class LiveEditorPlus extends LiveEditor {
   }
 
   private setupDetailsInElements(allLines: HTMLElement[], scanStart: number, scanEnd: number): void {
+    const isHybrid = this.viewMode === 'hybrid'
     let i = scanStart
 
     while (i < scanEnd && i < allLines.length) {
@@ -69,44 +70,43 @@ export class LiveEditorPlus extends LiveEditor {
         }
 
         if (summaryLine && closeLine) {
-          const key = summaryLine.dataset.line || String(i)
+          // Use opening line index as stable key (doesn't change when summary text is edited)
+          const key = String(i)
           const isExpanded = this.expandedDetails.has(key)
 
-          const toggle = document.createElement('span')
-          toggle.contentEditable = 'false'
-          toggle.className = 'live-details-toggle'
-          toggle.textContent = isExpanded ? '▼ ' : '▶ '
-          summaryLine.insertBefore(toggle, summaryLine.firstChild)
+          if (isHybrid) {
+            const toggle = document.createElement('span')
+            toggle.contentEditable = 'false'
+            toggle.className = 'live-details-toggle'
+            toggle.textContent = isExpanded ? '▼ ' : '▶ '
+            summaryLine.insertBefore(toggle, summaryLine.firstChild)
 
-          for (const cl of contentLines) {
-            cl.classList.add('live-details-content')
-            if (!isExpanded) {
-              cl.style.display = 'none'
+            for (const cl of contentLines) {
+              cl.classList.add('live-details-content')
+              if (!isExpanded) cl.style.display = 'none'
             }
-          }
 
-          if (!isExpanded) {
-            closeLine.style.display = 'none'
-          }
+            if (!isExpanded) closeLine.style.display = 'none'
 
-          const savedKey = key
-          const savedContentLines = contentLines
-          const savedCloseLine = closeLine
-          toggle.addEventListener('click', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (this.expandedDetails.has(savedKey)) {
-              this.expandedDetails.delete(savedKey)
-              toggle.textContent = '▶ '
-              for (const cl of savedContentLines) cl.style.display = 'none'
-              savedCloseLine.style.display = 'none'
-            } else {
-              this.expandedDetails.add(savedKey)
-              toggle.textContent = '▼ '
-              for (const cl of savedContentLines) cl.style.display = ''
-              savedCloseLine.style.display = ''
-            }
-          })
+            const savedKey = key
+            const savedContentLines = contentLines
+            const savedCloseLine = closeLine
+            toggle.addEventListener('click', (e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (this.expandedDetails.has(savedKey)) {
+                this.expandedDetails.delete(savedKey)
+                toggle.textContent = '▶ '
+                for (const cl of savedContentLines) cl.style.display = 'none'
+                savedCloseLine.style.display = 'none'
+              } else {
+                this.expandedDetails.add(savedKey)
+                toggle.textContent = '▼ '
+                for (const cl of savedContentLines) cl.style.display = ''
+                savedCloseLine.style.display = ''
+              }
+            })
+          }
 
           i = j + 1
           continue

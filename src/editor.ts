@@ -274,6 +274,50 @@ export class LiveEditor {
     this.insert(template)
   }
 
+  wrapOrInsert(template: string, placeholder: string): void {
+    if (!this.root.contains(document.activeElement) && document.activeElement !== this.root) {
+      this.root.focus()
+    }
+
+    const sel = window.getSelection()
+    const hasSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed
+
+    if (hasSelection) {
+      const range = sel.getRangeAt(0)
+      if (!this.root.contains(range.startContainer) || !this.root.contains(range.endContainer)) return
+
+      const startPos = this._rangeEndpointToLineOffset(range.startContainer, range.startOffset)
+      if (!startPos) return
+      const endPos = this._rangeEndpointToLineOffset(range.endContainer, range.endOffset)
+      if (!endPos) return
+
+      this.pushSnapshot()
+
+      const startFlat = this._lineOffsetToFlat(startPos.line, startPos.offset)
+      const endFlat = this._lineOffsetToFlat(endPos.line, endPos.offset)
+      if (startFlat === null || endFlat === null) return
+
+      const flatStart = Math.min(startFlat, endFlat)
+      const flatEnd = Math.max(startFlat, endFlat)
+
+      const fullText = this.getValue()
+      const selectedText = fullText.slice(flatStart, flatEnd)
+      const filled = template.replace('${sel}', selectedText)
+      const newText = fullText.slice(0, flatStart) + filled + fullText.slice(flatEnd)
+      this.lines = newText.split('\n')
+
+      const cursorFlat = flatStart + filled.length
+      const cursorPos = this._flatToLineOffset(cursorFlat)
+
+      this.renderAll()
+      this.redoStack.length = 0
+      if (cursorPos) this.restoreCursor(cursorPos)
+      this.emitChange()
+    } else {
+      this.insert(template.replace('${sel}', placeholder))
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Extension points — override in LiveEditorPlus
   // ---------------------------------------------------------------------------
@@ -394,10 +438,44 @@ export class LiveEditor {
 
     this.pushSnapshot() // save state before paste
 
-    // Calculate cursor position in the full text
+    const sel = window.getSelection()
+    const hasSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed
+
+    if (hasSelection) {
+      const range = sel.getRangeAt(0)
+      if (this.root.contains(range.startContainer) && this.root.contains(range.endContainer)) {
+        const startPos = this._rangeEndpointToLineOffset(range.startContainer, range.startOffset)
+        const endPos = this._rangeEndpointToLineOffset(range.endContainer, range.endOffset)
+        if (startPos && endPos) {
+          const startFlat = this._lineOffsetToFlat(startPos.line, startPos.offset)
+          const endFlat = this._lineOffsetToFlat(endPos.line, endPos.offset)
+          if (startFlat !== null && endFlat !== null) {
+            const flatStart = Math.min(startFlat, endFlat)
+            const flatEnd = Math.max(startFlat, endFlat)
+            const fullText = this.getValue()
+            this.lines = (fullText.slice(0, flatStart) + pastedText + fullText.slice(flatEnd)).split('\n')
+
+            let remaining = flatStart + pastedText.length
+            let newLine = 0
+            for (let i = 0; i < this.lines.length; i++) {
+              if (remaining <= this.lines[i].length) { newLine = i; break }
+              remaining -= this.lines[i].length + 1
+              newLine = i + 1
+            }
+
+            this.renderAll()
+            this.restoreCursor({ line: newLine, offset: Math.max(0, remaining) })
+            this.redoStack.length = 0
+            this.emitChange()
+            return
+          }
+        }
+      }
+    }
+
+    // No selection — insert at cursor
     const cursor = this.saveCursor()
     if (!cursor) {
-      // No cursor — just append
       this.lines = (this.getValue() + pastedText).split('\n')
       this.renderAll()
       this.redoStack.length = 0
@@ -410,12 +488,10 @@ export class LiveEditor {
     }
     charsBefore += cursor.offset
 
-    // Insert pasted text into the model
     const fullText = this.getValue()
     const newText = fullText.slice(0, charsBefore) + pastedText + fullText.slice(charsBefore)
     this.lines = newText.split('\n')
 
-    // Calculate new cursor position (end of pasted text)
     let remaining = charsBefore + pastedText.length
     let newLine = 0
     for (let i = 0; i < this.lines.length; i++) {

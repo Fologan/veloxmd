@@ -23,6 +23,15 @@
   --fastmd-red: #cf222e;
   --fastmd-orange: #bc4c00;
 
+  /* Details */
+  --fastmd-details-tag-color: var(--fastmd-text-muted);
+  --fastmd-details-tag-opacity: 0.7;
+  --fastmd-details-summary-color: var(--fastmd-accent);
+  --fastmd-details-summary-weight: 600;
+  --fastmd-details-toggle-opacity: 0.7;
+  --fastmd-details-content-border: var(--fastmd-accent);
+  --fastmd-details-content-opacity: 0.9;
+
   /* Toolbar */
   --fastmd-toolbar-bg: #ffffff;
   --fastmd-toolbar-border: #e1e4e8;
@@ -51,6 +60,15 @@
   --fastmd-purple: #d2a8ff;
   --fastmd-red: #ff7b72;
   --fastmd-orange: #ffa657;
+
+  /* Details */
+  --fastmd-details-tag-color: var(--fastmd-text-muted);
+  --fastmd-details-tag-opacity: 0.7;
+  --fastmd-details-summary-color: var(--fastmd-accent);
+  --fastmd-details-summary-weight: 600;
+  --fastmd-details-toggle-opacity: 0.7;
+  --fastmd-details-content-border: var(--fastmd-accent);
+  --fastmd-details-content-opacity: 0.9;
 
   /* Toolbar */
   --fastmd-toolbar-bg: #1e1e1e;
@@ -406,9 +424,8 @@
 /* ---- HTML inline ---- */
 
 .live-html-tag {
-  color: var(--fastmd-syntax);
-  opacity: 0.4;
-  font-size: 0.88em;
+  color: var(--fastmd-details-tag-color);
+  opacity: var(--fastmd-details-tag-opacity);
 }
 
 .live-line kbd {
@@ -483,21 +500,19 @@
 /* ---- Details ---- */
 
 .live-details-fence {
-  color: var(--fastmd-syntax);
-  opacity: 0.5;
-  font-size: 0.88em;
+  color: var(--fastmd-details-tag-color);
+  opacity: var(--fastmd-details-tag-opacity);
 }
 
 .live-details-summary {
-  color: var(--fastmd-accent);
-  font-weight: 600;
+  color: var(--fastmd-details-summary-color);
+  font-weight: var(--fastmd-details-summary-weight);
 }
 
 .live-details-toggle {
   cursor: pointer;
   user-select: none;
-  font-size: 0.75em;
-  opacity: 0.6;
+  opacity: var(--fastmd-details-toggle-opacity);
   margin-right: 2px;
   transition: opacity 0.15s;
 }
@@ -507,10 +522,27 @@
 }
 
 .live-details-content {
-  border-left: 2px solid var(--fastmd-accent);
+  border-left: 2px solid var(--fastmd-details-content-border);
   margin-left: 8px;
   padding-left: 12px;
-  opacity: 0.85;
+  opacity: var(--fastmd-details-content-opacity);
+}
+
+/* ---- Details viewer (static) ---- */
+
+.live-viewer-details {
+  margin: 4px 0;
+}
+
+.live-viewer-summary {
+  cursor: pointer;
+  font-weight: var(--fastmd-details-summary-weight);
+  color: var(--fastmd-details-summary-color);
+  user-select: none;
+}
+
+.live-viewer-summary:hover {
+  opacity: 0.8;
 }
 
 /* ---- Image preview ---- */

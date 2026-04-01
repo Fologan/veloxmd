@@ -1,6 +1,6 @@
 {
   "name": "@fologan/fastmd",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "In-place markdown editor. Zero dependencies. The text formats itself.",
   "type": "module",
   "main": "./dist/index.cjs",

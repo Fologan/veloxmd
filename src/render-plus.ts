@@ -12,7 +12,7 @@ const SPAN_CLASS: Record<string, string> = {
   'ref-link-text': 'live-link-text',
   'ref-link-label': 'live-ref-label',
   'link-title': 'live-link-title',
-  'html-tag': 'live-html-tag',
+  'html-tag': 'live-html-tag syntax',
   'math-inline': 'live-math',
   'hard-break': 'live-hard-break',
   'image-alt': 'live-image-alt',

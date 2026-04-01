@@ -32,6 +32,7 @@ export class LiveEditor {
   protected lines: string[] = ['']
   protected rendering = false
   protected focusedLine = -1
+  protected focusedBlockRange: [number, number] | null = null
   protected viewMode: ViewMode = 'source'
   private wrapper: HTMLDivElement
   private toolbar?: Toolbar
@@ -274,6 +275,50 @@ export class LiveEditor {
     this.insert(template)
   }
 
+  wrapOrInsert(template: string, placeholder: string): void {
+    if (!this.root.contains(document.activeElement) && document.activeElement !== this.root) {
+      this.root.focus()
+    }
+
+    const sel = window.getSelection()
+    const hasSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed
+
+    if (hasSelection) {
+      const range = sel.getRangeAt(0)
+      if (!this.root.contains(range.startContainer) || !this.root.contains(range.endContainer)) return
+
+      const startPos = this._rangeEndpointToLineOffset(range.startContainer, range.startOffset)
+      if (!startPos) return
+      const endPos = this._rangeEndpointToLineOffset(range.endContainer, range.endOffset)
+      if (!endPos) return
+
+      this.pushSnapshot()
+
+      const startFlat = this._lineOffsetToFlat(startPos.line, startPos.offset)
+      const endFlat = this._lineOffsetToFlat(endPos.line, endPos.offset)
+      if (startFlat === null || endFlat === null) return
+
+      const flatStart = Math.min(startFlat, endFlat)
+      const flatEnd = Math.max(startFlat, endFlat)
+
+      const fullText = this.getValue()
+      const selectedText = fullText.slice(flatStart, flatEnd)
+      const filled = template.replace('${sel}', selectedText)
+      const newText = fullText.slice(0, flatStart) + filled + fullText.slice(flatEnd)
+      this.lines = newText.split('\n')
+
+      const cursorFlat = flatStart + filled.length
+      const cursorPos = this._flatToLineOffset(cursorFlat)
+
+      this.renderAll()
+      this.redoStack.length = 0
+      if (cursorPos) this.restoreCursor(cursorPos)
+      this.emitChange()
+    } else {
+      this.insert(template.replace('${sel}', placeholder))
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Extension points — override in LiveEditorPlus
   // ---------------------------------------------------------------------------
@@ -394,10 +439,44 @@ export class LiveEditor {
 
     this.pushSnapshot() // save state before paste
 
-    // Calculate cursor position in the full text
+    const sel = window.getSelection()
+    const hasSelection = sel && sel.rangeCount > 0 && !sel.isCollapsed
+
+    if (hasSelection) {
+      const range = sel.getRangeAt(0)
+      if (this.root.contains(range.startContainer) && this.root.contains(range.endContainer)) {
+        const startPos = this._rangeEndpointToLineOffset(range.startContainer, range.startOffset)
+        const endPos = this._rangeEndpointToLineOffset(range.endContainer, range.endOffset)
+        if (startPos && endPos) {
+          const startFlat = this._lineOffsetToFlat(startPos.line, startPos.offset)
+          const endFlat = this._lineOffsetToFlat(endPos.line, endPos.offset)
+          if (startFlat !== null && endFlat !== null) {
+            const flatStart = Math.min(startFlat, endFlat)
+            const flatEnd = Math.max(startFlat, endFlat)
+            const fullText = this.getValue()
+            this.lines = (fullText.slice(0, flatStart) + pastedText + fullText.slice(flatEnd)).split('\n')
+
+            let remaining = flatStart + pastedText.length
+            let newLine = 0
+            for (let i = 0; i < this.lines.length; i++) {
+              if (remaining <= this.lines[i].length) { newLine = i; break }
+              remaining -= this.lines[i].length + 1
+              newLine = i + 1
+            }
+
+            this.renderAll()
+            this.restoreCursor({ line: newLine, offset: Math.max(0, remaining) })
+            this.redoStack.length = 0
+            this.emitChange()
+            return
+          }
+        }
+      }
+    }
+
+    // No selection — insert at cursor
     const cursor = this.saveCursor()
     if (!cursor) {
-      // No cursor — just append
       this.lines = (this.getValue() + pastedText).split('\n')
       this.renderAll()
       this.redoStack.length = 0
@@ -410,12 +489,10 @@ export class LiveEditor {
     }
     charsBefore += cursor.offset
 
-    // Insert pasted text into the model
     const fullText = this.getValue()
     const newText = fullText.slice(0, charsBefore) + pastedText + fullText.slice(charsBefore)
     this.lines = newText.split('\n')
 
-    // Calculate new cursor position (end of pasted text)
     let remaining = charsBefore + pastedText.length
     let newLine = 0
     for (let i = 0; i < this.lines.length; i++) {
@@ -556,15 +633,48 @@ export class LiveEditor {
     const el = this.lineOf(sel.getRangeAt(0).startContainer)
     const idx = el ? parseInt(el.dataset.line || '-1') : -1
 
+    // If cursor is still within the same focused block, just update focusedLine
+    if (this.focusedBlockRange && idx >= this.focusedBlockRange[0] && idx < this.focusedBlockRange[1]) {
+      this.focusedLine = idx
+      return
+    }
+
     if (idx !== this.focusedLine) {
       const oldFocused = this.focusedLine
-      this.root.querySelector('.live-line.focused')?.classList.remove('focused')
-      el?.classList.add('focused')
-      this.focusedLine = idx
-      if (this.viewMode === 'hybrid') {
-        this.hybrid.onFocusChange(this.root, oldFocused, idx)
+      // Remove .focused from ALL previously focused lines
+      this.root.querySelectorAll('.live-line.focused').forEach(l => l.classList.remove('focused'))
+
+      // Determine block range for the new line
+      let blockRange: [number, number] | null = null
+      if (idx >= 0 && this.prevParsed[idx] && LiveEditor.isMultiLineBlockType(this.prevParsed[idx].blockType)) {
+        blockRange = this.findBlockRange(this.prevParsed, idx)
       }
+
+      if (blockRange) {
+        // Add .focused to all lines in the block
+        for (let i = blockRange[0]; i < blockRange[1]; i++) {
+          const lineEl = this.root.querySelector(`[data-line="${i}"]`)
+          if (lineEl) lineEl.classList.add('focused')
+        }
+      } else if (el) {
+        el.classList.add('focused')
+      }
+
+      const oldBlockRange = this.focusedBlockRange
+      this.focusedLine = idx
+      this.focusedBlockRange = blockRange
+
+      if (this.viewMode === 'hybrid') {
+        this.hybrid.onFocusChange(this.root, oldFocused, idx, blockRange ?? undefined)
+      }
+
+      this.onBlockFocusChange(oldBlockRange, blockRange)
     }
+  }
+
+  /** Called when block focus changes — override in subclass to react */
+  protected onBlockFocusChange(_oldRange: [number, number] | null, _newRange: [number, number] | null): void {
+    // Override in LiveEditorPlus
   }
 
   // ---------------------------------------------------------------------------
@@ -580,11 +690,25 @@ export class LiveEditor {
       if (child.nodeType === Node.TEXT_NODE) {
         out.push(...(child.textContent || '').split('\n'))
       } else if (child instanceof HTMLElement) {
-        out.push(child.tagName === 'BR' ? '' : (child.textContent || ''))
+        out.push(child.tagName === 'BR' ? '' : this.readLineText(child))
       }
     }
     if (out.length === 0) out.push('')
     this.lines = out
+  }
+
+  /** Read text content of a line element, excluding non-editable decorations */
+  private readLineText(el: HTMLElement): string {
+    let text = ''
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent || ''
+      } else if (node instanceof HTMLElement) {
+        if (node.contentEditable === 'false') continue
+        text += node.textContent || ''
+      }
+    }
+    return text
   }
 
   // ---------------------------------------------------------------------------
@@ -710,6 +834,13 @@ export class LiveEditor {
     // Override in LiveEditorPlus to handle details blocks for the affected range
   }
 
+  private isLineFocused(i: number): boolean {
+    if (this.focusedBlockRange) {
+      return i >= this.focusedBlockRange[0] && i < this.focusedBlockRange[1]
+    }
+    return i === this.focusedLine
+  }
+
   private static isMultiLineBlockType(bt: string): boolean {
     switch (bt) {
       case 'code-block-open':
@@ -823,7 +954,7 @@ export class LiveEditor {
     const frag = document.createDocumentFragment()
     for (let i = blockStart; i < blockEnd; i++) {
       const el = this.renderLine(newParsed[i], i)
-      if (i === this.focusedLine) el.classList.add('focused')
+      if (this.isLineFocused(i)) el.classList.add('focused')
       frag.appendChild(el)
     }
 
@@ -862,7 +993,7 @@ export class LiveEditor {
 
     for (let i = 0; i < parsed.length; i++) {
       const el = this.renderLine(parsed[i], i)
-      if (i === this.focusedLine) el.classList.add('focused')
+      if (this.isLineFocused(i)) el.classList.add('focused')
       frag.appendChild(el)
     }
 

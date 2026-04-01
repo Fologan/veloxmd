@@ -57,11 +57,15 @@ export class HybridController {
   // Focus change — ensure widths are set for smooth transition
   // ---------------------------------------------------------------------------
 
-  onFocusChange(root: HTMLElement, _oldIdx: number, newIdx: number): void {
+  onFocusChange(root: HTMLElement, _oldIdx: number, newIdx: number, blockRange?: [number, number]): void {
     if (newIdx < 0) return
     this.resolveBaseFont(root)
-    const newLine = root.querySelector(`[data-line="${newIdx}"]`) as HTMLElement | null
-    if (newLine) this.annotateLineWidths(newLine)
+    if (blockRange) {
+      this.annotateBlockWidths(root, blockRange[0], blockRange[1])
+    } else {
+      const newLine = root.querySelector(`[data-line="${newIdx}"]`) as HTMLElement | null
+      if (newLine) this.annotateLineWidths(newLine)
+    }
   }
 
   private annotateLineWidths(lineEl: HTMLElement): void {

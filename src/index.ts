@@ -40,5 +40,22 @@ export { parseLiveInlinePlus } from './parse-inline-plus.js'
 export { createSegmentNode, renderLineElement } from './render.js'
 export { createSegmentNodePlus, renderLineElementPlus } from './render-plus.js'
 
+// Table engine
+export { extractTableData, renderStaticTable } from './table-render.js'
+export type { TableModel, TableAlign } from './table-render.js'
+
+// Table engine (advanced)
+export {
+  createTableModel, renderTableText,
+  graphemeLen, displayWidth,
+  cursorToTableCell, tableCellToCursor, nearestTableCell,
+  TABLE_BORDERS,
+} from './table-engine.js'
+export type { TableCellPos, TableRenderResult } from './table-engine.js'
+
+// Table toolbar
+export { TableToolbar } from './table-toolbar.js'
+export type { TableAction } from './table-toolbar.js'
+
 // Cursor utilities
 export { getFlatOffset, setFlatOffset } from './cursor.js'

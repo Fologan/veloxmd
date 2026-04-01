@@ -32,6 +32,7 @@ export class LiveEditor {
   protected lines: string[] = ['']
   protected rendering = false
   protected focusedLine = -1
+  protected focusedBlockRange: [number, number] | null = null
   protected viewMode: ViewMode = 'source'
   private wrapper: HTMLDivElement
   private toolbar?: Toolbar
@@ -632,15 +633,48 @@ export class LiveEditor {
     const el = this.lineOf(sel.getRangeAt(0).startContainer)
     const idx = el ? parseInt(el.dataset.line || '-1') : -1
 
+    // If cursor is still within the same focused block, just update focusedLine
+    if (this.focusedBlockRange && idx >= this.focusedBlockRange[0] && idx < this.focusedBlockRange[1]) {
+      this.focusedLine = idx
+      return
+    }
+
     if (idx !== this.focusedLine) {
       const oldFocused = this.focusedLine
-      this.root.querySelector('.live-line.focused')?.classList.remove('focused')
-      el?.classList.add('focused')
-      this.focusedLine = idx
-      if (this.viewMode === 'hybrid') {
-        this.hybrid.onFocusChange(this.root, oldFocused, idx)
+      // Remove .focused from ALL previously focused lines
+      this.root.querySelectorAll('.live-line.focused').forEach(l => l.classList.remove('focused'))
+
+      // Determine block range for the new line
+      let blockRange: [number, number] | null = null
+      if (idx >= 0 && this.prevParsed[idx] && LiveEditor.isMultiLineBlockType(this.prevParsed[idx].blockType)) {
+        blockRange = this.findBlockRange(this.prevParsed, idx)
       }
+
+      if (blockRange) {
+        // Add .focused to all lines in the block
+        for (let i = blockRange[0]; i < blockRange[1]; i++) {
+          const lineEl = this.root.querySelector(`[data-line="${i}"]`)
+          if (lineEl) lineEl.classList.add('focused')
+        }
+      } else if (el) {
+        el.classList.add('focused')
+      }
+
+      const oldBlockRange = this.focusedBlockRange
+      this.focusedLine = idx
+      this.focusedBlockRange = blockRange
+
+      if (this.viewMode === 'hybrid') {
+        this.hybrid.onFocusChange(this.root, oldFocused, idx, blockRange ?? undefined)
+      }
+
+      this.onBlockFocusChange(oldBlockRange, blockRange)
     }
+  }
+
+  /** Called when block focus changes — override in subclass to react */
+  protected onBlockFocusChange(_oldRange: [number, number] | null, _newRange: [number, number] | null): void {
+    // Override in LiveEditorPlus
   }
 
   // ---------------------------------------------------------------------------
@@ -656,11 +690,25 @@ export class LiveEditor {
       if (child.nodeType === Node.TEXT_NODE) {
         out.push(...(child.textContent || '').split('\n'))
       } else if (child instanceof HTMLElement) {
-        out.push(child.tagName === 'BR' ? '' : (child.textContent || ''))
+        out.push(child.tagName === 'BR' ? '' : this.readLineText(child))
       }
     }
     if (out.length === 0) out.push('')
     this.lines = out
+  }
+
+  /** Read text content of a line element, excluding non-editable decorations */
+  private readLineText(el: HTMLElement): string {
+    let text = ''
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent || ''
+      } else if (node instanceof HTMLElement) {
+        if (node.contentEditable === 'false') continue
+        text += node.textContent || ''
+      }
+    }
+    return text
   }
 
   // ---------------------------------------------------------------------------
@@ -786,6 +834,13 @@ export class LiveEditor {
     // Override in LiveEditorPlus to handle details blocks for the affected range
   }
 
+  private isLineFocused(i: number): boolean {
+    if (this.focusedBlockRange) {
+      return i >= this.focusedBlockRange[0] && i < this.focusedBlockRange[1]
+    }
+    return i === this.focusedLine
+  }
+
   private static isMultiLineBlockType(bt: string): boolean {
     switch (bt) {
       case 'code-block-open':
@@ -899,7 +954,7 @@ export class LiveEditor {
     const frag = document.createDocumentFragment()
     for (let i = blockStart; i < blockEnd; i++) {
       const el = this.renderLine(newParsed[i], i)
-      if (i === this.focusedLine) el.classList.add('focused')
+      if (this.isLineFocused(i)) el.classList.add('focused')
       frag.appendChild(el)
     }
 
@@ -938,7 +993,7 @@ export class LiveEditor {
 
     for (let i = 0; i < parsed.length; i++) {
       const el = this.renderLine(parsed[i], i)
-      if (i === this.focusedLine) el.classList.add('focused')
+      if (this.isLineFocused(i)) el.classList.add('focused')
       frag.appendChild(el)
     }
 

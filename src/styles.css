@@ -32,6 +32,13 @@
   --fastmd-details-content-border: var(--fastmd-accent);
   --fastmd-details-content-opacity: 0.9;
 
+  /* Table (rendered) */
+  --fastmd-table-header-bg: var(--fastmd-surface-2);
+  --fastmd-table-header-color: var(--fastmd-text-bright);
+  --fastmd-table-border: var(--fastmd-border);
+  --fastmd-table-row-even: var(--fastmd-surface);
+  --fastmd-table-row-hover: rgba(9, 105, 218, 0.06);
+
   /* Toolbar */
   --fastmd-toolbar-bg: #ffffff;
   --fastmd-toolbar-border: #e1e4e8;
@@ -69,6 +76,13 @@
   --fastmd-details-toggle-opacity: 0.7;
   --fastmd-details-content-border: var(--fastmd-accent);
   --fastmd-details-content-opacity: 0.9;
+
+  /* Table (rendered) */
+  --fastmd-table-header-bg: var(--fastmd-surface-2);
+  --fastmd-table-header-color: var(--fastmd-text-bright);
+  --fastmd-table-border: var(--fastmd-border);
+  --fastmd-table-row-even: var(--fastmd-surface);
+  --fastmd-table-row-hover: rgba(88, 166, 255, 0.06);
 
   /* Toolbar */
   --fastmd-toolbar-bg: #1e1e1e;
@@ -428,6 +442,12 @@
   opacity: var(--fastmd-details-tag-opacity);
 }
 
+/* When focused in hybrid, html tags should be inline to preserve line alignment */
+.hybrid-mode .live-line.focused .live-html-tag.syntax {
+  display: inline;
+  width: auto !important;
+}
+
 .live-line kbd {
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.85em;
@@ -544,6 +564,40 @@
 .live-viewer-summary:hover {
   opacity: 0.8;
 }
+
+/* ---- Rendered table (static & hybrid overlay) ---- */
+
+.fastmd-table {
+  border-collapse: collapse;
+  width: auto;
+  margin: 4px 0;
+  font-size: 0.92em;
+}
+
+.fastmd-table th,
+.fastmd-table td {
+  border: 1px solid var(--fastmd-table-border);
+  padding: 8px 14px;
+  text-align: left;
+}
+
+.fastmd-table th {
+  background: var(--fastmd-table-header-bg);
+  color: var(--fastmd-table-header-color);
+  font-weight: 700;
+}
+
+.fastmd-table tbody tr:nth-child(even) td {
+  background: var(--fastmd-table-row-even);
+}
+
+.fastmd-table tbody tr:hover td {
+  background: var(--fastmd-table-row-hover);
+}
+
+.fastmd-align-center { text-align: center; }
+.fastmd-align-right { text-align: right; }
+.fastmd-align-left { text-align: left; }
 
 /* ---- Image preview ---- */
 

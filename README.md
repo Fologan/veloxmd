@@ -1,4 +1,4 @@
-# FastMD
+# VeloxMD
 
 In-place markdown editor for the web. Zero dependencies. ~2KB gzipped.
 
@@ -11,7 +11,7 @@ The text formats itself as you type — no split view, no separate preview pane.
 ## Install
 
 ```bash
-npm install @fologan/fastmd
+npm install veloxmd
 ```
 
 ## Quick Start
@@ -19,8 +19,8 @@ npm install @fologan/fastmd
 ### Basic Editor
 
 ```ts
-import { LiveEditor } from '@fologan/fastmd'
-import '@fologan/fastmd/styles.css'
+import { LiveEditor } from 'veloxmd'
+import 'veloxmd/styles.css'
 
 const editor = new LiveEditor(document.getElementById('editor'))
 editor.setValue('# Hello **world**')
@@ -29,8 +29,8 @@ editor.setValue('# Hello **world**')
 ### Full-Featured Editor with Toolbar
 
 ```ts
-import { LiveEditorPlus } from '@fologan/fastmd'
-import '@fologan/fastmd/styles.css'
+import { LiveEditorPlus } from 'veloxmd'
+import 'veloxmd/styles.css'
 
 const editor = new LiveEditorPlus(document.getElementById('editor'), {
   toolbar: true,
@@ -44,8 +44,8 @@ editor.setValue('# Hello **world**')
 ### Static Viewer (read-only)
 
 ```ts
-import { LiveViewer } from '@fologan/fastmd'
-import '@fologan/fastmd/styles.css'
+import { LiveViewer } from 'veloxmd'
+import 'veloxmd/styles.css'
 
 const viewer = new LiveViewer(document.getElementById('preview'))
 viewer.setValue('# Hello **world**')
@@ -55,7 +55,7 @@ Same CSS, same styling — but no `contenteditable`, no event listeners, no undo
 
 ## View Modes
 
-FastMD has three ways to display markdown:
+VeloxMD has three ways to display markdown:
 
 | Mode | Class | What you see |
 |------|-------|-------------|
@@ -63,7 +63,7 @@ FastMD has three ways to display markdown:
 | **Hybrid** | `LiveEditorPlus` + `setViewMode('hybrid')` | Same live formatting, but syntax markers collapse to zero-width on unfocused lines and expand with animation on focus — a clean reading experience that reveals markdown on demand. |
 | **Static** | `LiveViewer` | Read-only rendered output. No syntax markers, no editing, no runtime overhead. |
 
-Source mode is what makes FastMD unique — it's not a plain-text editor with a preview pane. The text formats itself as you type while keeping every markdown character editable in place.
+Source mode is what makes VeloxMD unique — it's not a plain-text editor with a preview pane. The text formats itself as you type while keeping every markdown character editable in place.
 
 ```ts
 // Switch between source and hybrid at runtime
@@ -73,7 +73,7 @@ editor.setViewMode('source')
 
 ## How It Works
 
-FastMD uses **character parity** — a design principle where every raw markdown character stays in the DOM. Syntax markers like `#`, `**`, `*`, `` ` `` are not removed; they're wrapped in `<span class="syntax">` and dimmed with CSS opacity.
+VeloxMD uses **character parity** — a design principle where every raw markdown character stays in the DOM. Syntax markers like `#`, `**`, `*`, `` ` `` are not removed; they're wrapped in `<span class="syntax">` and dimmed with CSS opacity.
 
 This means the flat character offset in your raw text always matches the flat offset in the DOM. Cursor save/restore after re-rendering becomes trivial — no complex position mapping needed. The entire cursor system is ~50 lines of code.
 
@@ -169,7 +169,7 @@ The toolbar is responsive — buttons that overflow are automatically moved to a
 
 ## Theming
 
-FastMD uses CSS custom properties prefixed with `--fastmd-`. Override them to match your app's design:
+VeloxMD uses CSS custom properties prefixed with `--fastmd-`. Override them to match your app's design:
 
 ```css
 .my-editor-container {
@@ -232,7 +232,7 @@ viewer.destroy(): void
 ### Parsers
 
 ```ts
-import { parseLiveDocument, parseLiveDocumentPlus } from '@fologan/fastmd'
+import { parseLiveDocument, parseLiveDocumentPlus } from 'veloxmd'
 
 const lines = parseLiveDocument(['# Hello', '', '**Bold** text'])
 // Returns LiveLine[] with block types and inline segments
@@ -241,7 +241,7 @@ const lines = parseLiveDocument(['# Hello', '', '**Bold** text'])
 ### Cursor Utilities
 
 ```ts
-import { getFlatOffset, setFlatOffset } from '@fologan/fastmd'
+import { getFlatOffset, setFlatOffset } from 'veloxmd'
 
 // Convert DOM position -> flat character offset
 const offset = getFlatOffset(container, node, nodeOffset)
@@ -252,4 +252,4 @@ const pos = setFlatOffset(container, 42)
 
 ## License
 
-[MIT](LICENSE) - Charles Montero
+[MIT](LICENSE) - Fologan

@@ -34,7 +34,7 @@ export class LiveEditor {
   protected focusedLine = -1
   protected focusedBlockRange: [number, number] | null = null
   protected viewMode: ViewMode = 'source'
-  private wrapper: HTMLDivElement
+  protected wrapper: HTMLDivElement
   private toolbar?: Toolbar
   private hybrid = new HybridController()
   private boundSelectionChange = () => this.onSelectionChange()
@@ -51,7 +51,7 @@ export class LiveEditor {
 
   constructor(container: HTMLElement, options?: EditorOptions) {
     this.wrapper = document.createElement('div')
-    this.wrapper.className = 'fastmd-wrapper'
+    this.wrapper.className = 'veloxmd-wrapper'
     container.appendChild(this.wrapper)
 
     this.root = document.createElement('div')
@@ -782,7 +782,7 @@ export class LiveEditor {
     return { line: lineIdx, offset: getFlatOffset(lineNode, node, domOffset) }
   }
 
-  private _lineOffsetToFlat(line: number, offset: number): number | null {
+  protected _lineOffsetToFlat(line: number, offset: number): number | null {
     if (this.lines.length === 0) return 0
     if (line < 0 || line >= this.lines.length) return null
     let flat = 0
@@ -791,7 +791,7 @@ export class LiveEditor {
     return flat
   }
 
-  private _flatToLineOffset(flat: number): { line: number; offset: number } | null {
+  protected _flatToLineOffset(flat: number): { line: number; offset: number } | null {
     if (this.lines.length === 0) return { line: 0, offset: 0 }
     let remaining = Math.max(0, flat)
     for (let i = 0; i < this.lines.length; i++) {
@@ -803,7 +803,7 @@ export class LiveEditor {
     return { line: lastLine, offset: this.lines[lastLine].length }
   }
 
-  private _restoreCursorRange(
+  protected _restoreCursorRange(
     startPos: { line: number; offset: number },
     endPos: { line: number; offset: number }
   ): void {

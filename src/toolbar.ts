@@ -1,5 +1,5 @@
 // =============================================================================
-// Toolbar — FastMD editor toolbar (config-driven, zero per-button listeners)
+// Toolbar — VeloxMD editor toolbar (config-driven, zero per-button listeners)
 // =============================================================================
 
 // [action, innerHTML, title, group] — group number drives separator placement
@@ -79,40 +79,40 @@ export class Toolbar {
     let curGroup = 0
     for (const [action, label, title, group] of BUTTONS) {
       if (group !== curGroup) {
-        if (curGroup) groupHtml += '</div><div class="fastmd-toolbar-separator" role="separator"></div>'
-        groupHtml += `<div class="fastmd-toolbar-group" role="group" aria-label="${GROUP_LABELS[group] || ''}">`
+        if (curGroup) groupHtml += '</div><div class="veloxmd-toolbar-separator" role="separator"></div>'
+        groupHtml += `<div class="veloxmd-toolbar-group" role="group" aria-label="${GROUP_LABELS[group] || ''}">`
         curGroup = group
       }
       if (action === 'heading') {
         const items = HEADINGS.map((h, i) => `<button role="menuitem" data-action="heading-${i}">${h}</button>`).join('')
-        groupHtml += `<div class="fastmd-toolbar-dropdown">
-          <button class="fastmd-toolbar-btn" data-action="heading" title="${title}" aria-haspopup="true" aria-expanded="false" aria-label="Heading">${label}</button>
-          <div class="fastmd-toolbar-dropdown-menu" role="menu">${items}</div>
+        groupHtml += `<div class="veloxmd-toolbar-dropdown">
+          <button class="veloxmd-toolbar-btn" data-action="heading" title="${title}" aria-haspopup="true" aria-expanded="false" aria-label="Heading">${label}</button>
+          <div class="veloxmd-toolbar-dropdown-menu" role="menu">${items}</div>
         </div>`
       } else {
-        groupHtml += `<button class="fastmd-toolbar-btn" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
+        groupHtml += `<button class="veloxmd-toolbar-btn" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
       }
     }
     groupHtml += '</div>'
 
     // Overflow button + menu (hidden until needed)
-    const overflowHtml = `<div class="fastmd-toolbar-group fastmd-toolbar-overflow" style="display:none">
-      <div class="fastmd-toolbar-dropdown">
-        <button class="fastmd-toolbar-btn" data-action="overflow" title="More" aria-label="More formatting options" aria-haspopup="true" aria-expanded="false">⋯</button>
-        <div class="fastmd-toolbar-dropdown-menu fastmd-toolbar-overflow-menu" role="menu"></div>
+    const overflowHtml = `<div class="veloxmd-toolbar-group veloxmd-toolbar-overflow" style="display:none">
+      <div class="veloxmd-toolbar-dropdown">
+        <button class="veloxmd-toolbar-btn" data-action="overflow" title="More" aria-label="More formatting options" aria-haspopup="true" aria-expanded="false">⋯</button>
+        <div class="veloxmd-toolbar-dropdown-menu veloxmd-toolbar-overflow-menu" role="menu"></div>
       </div>
     </div>`
 
     const bar = document.createElement('div')
-    bar.className = 'fastmd-toolbar'
+    bar.className = 'veloxmd-toolbar'
     bar.setAttribute('role', 'toolbar')
     bar.setAttribute('aria-label', 'Formatting toolbar')
     bar.innerHTML = groupHtml + overflowHtml
     wrapper.insertBefore(bar, editor.root)
 
     this.bar = bar
-    this.overflow = bar.querySelector('.fastmd-toolbar-overflow')!
-    this.overflowMenu = bar.querySelector('.fastmd-toolbar-overflow-menu')!
+    this.overflow = bar.querySelector('.veloxmd-toolbar-overflow')!
+    this.overflowMenu = bar.querySelector('.veloxmd-toolbar-overflow-menu')!
 
     // Single delegated mousedown handler — preventDefault keeps editor focus
     bar.addEventListener('mousedown', this.onMouseDown)
@@ -146,7 +146,7 @@ export class Toolbar {
 
     // Heading trigger: toggle dropdown
     if (action === 'heading') {
-      const dd = btn.closest('.fastmd-toolbar-dropdown')!
+      const dd = btn.closest('.veloxmd-toolbar-dropdown')!
       const isOpen = dd.classList.contains('open')
       this.closeAll()
       if (!isOpen) {
@@ -158,7 +158,7 @@ export class Toolbar {
 
     // Overflow trigger: toggle overflow menu
     if (action === 'overflow') {
-      const dd = btn.closest('.fastmd-toolbar-dropdown')!
+      const dd = btn.closest('.veloxmd-toolbar-dropdown')!
       const isOpen = dd.classList.contains('open')
       this.closeAll()
       if (!isOpen) {
@@ -176,7 +176,7 @@ export class Toolbar {
   }
 
   private closeAll() {
-    this.bar.querySelectorAll('.fastmd-toolbar-dropdown.open').forEach(d => {
+    this.bar.querySelectorAll('.veloxmd-toolbar-dropdown.open').forEach(d => {
       d.classList.remove('open')
       const trigger = d.querySelector('[aria-expanded]')
       trigger?.setAttribute('aria-expanded', 'false')
@@ -187,13 +187,13 @@ export class Toolbar {
   private updateOverflow() {
     const bar = this.bar
     // Restore all hidden buttons first
-    bar.querySelectorAll<HTMLElement>('.fastmd-toolbar-btn[data-hidden]').forEach(b => {
+    bar.querySelectorAll<HTMLElement>('.veloxmd-toolbar-btn[data-hidden]').forEach(b => {
       b.removeAttribute('data-hidden')
       b.style.display = ''
-      const grp = b.closest('.fastmd-toolbar-group') as HTMLElement
-      if (grp && !grp.classList.contains('fastmd-toolbar-overflow')) grp.style.display = ''
+      const grp = b.closest('.veloxmd-toolbar-group') as HTMLElement
+      if (grp && !grp.classList.contains('veloxmd-toolbar-overflow')) grp.style.display = ''
       const sep = grp?.previousElementSibling as HTMLElement
-      if (sep?.classList.contains('fastmd-toolbar-separator')) sep.style.display = ''
+      if (sep?.classList.contains('veloxmd-toolbar-separator')) sep.style.display = ''
     })
     this.overflowMenu.innerHTML = ''
     this.overflow.style.display = 'none'
@@ -205,8 +205,8 @@ export class Toolbar {
     // Collect dropdown containers and direct buttons per group
     const allItems = Array.from(
       bar.querySelectorAll<HTMLElement>(
-        '.fastmd-toolbar-group:not(.fastmd-toolbar-overflow) > .fastmd-toolbar-btn, ' +
-        '.fastmd-toolbar-group:not(.fastmd-toolbar-overflow) > .fastmd-toolbar-dropdown'
+        '.veloxmd-toolbar-group:not(.veloxmd-toolbar-overflow) > .veloxmd-toolbar-btn, ' +
+        '.veloxmd-toolbar-group:not(.veloxmd-toolbar-overflow) > .veloxmd-toolbar-dropdown'
       )
     )
 
@@ -216,7 +216,7 @@ export class Toolbar {
       if (rect.right > threshold) {
         overflowItems.push(item)
         // Hide original; clone into overflow menu
-        const trigger = item.querySelector<HTMLElement>('.fastmd-toolbar-btn') ?? (item as HTMLElement)
+        const trigger = item.querySelector<HTMLElement>('.veloxmd-toolbar-btn') ?? (item as HTMLElement)
         trigger.setAttribute('data-hidden', '1')
         trigger.style.display = 'none'
         const clone = trigger.cloneNode(true) as HTMLElement
@@ -232,12 +232,12 @@ export class Toolbar {
     }
 
     // Hide separator if entire group is hidden
-    bar.querySelectorAll<HTMLElement>('.fastmd-toolbar-group:not(.fastmd-toolbar-overflow)').forEach(grp => {
-      const visible = grp.querySelectorAll<HTMLElement>('.fastmd-toolbar-btn:not([data-hidden])')
+    bar.querySelectorAll<HTMLElement>('.veloxmd-toolbar-group:not(.veloxmd-toolbar-overflow)').forEach(grp => {
+      const visible = grp.querySelectorAll<HTMLElement>('.veloxmd-toolbar-btn:not([data-hidden])')
       if (visible.length === 0) {
         grp.style.display = 'none'
         const sep = grp.previousElementSibling as HTMLElement
-        if (sep?.classList.contains('fastmd-toolbar-separator')) sep.style.display = 'none'
+        if (sep?.classList.contains('veloxmd-toolbar-separator')) sep.style.display = 'none'
       }
     })
   }

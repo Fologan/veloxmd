@@ -61,16 +61,16 @@ export function extractTableData(lines: LiveLine[]): TableModel {
 // ---------------------------------------------------------------------------
 
 const ALIGN_CLASS: Record<string, string> = {
-  left: 'fastmd-align-left',
-  center: 'fastmd-align-center',
-  right: 'fastmd-align-right',
-  justify: 'fastmd-align-left',
+  left: 'veloxmd-align-left',
+  center: 'veloxmd-align-center',
+  right: 'veloxmd-align-right',
+  justify: 'veloxmd-align-left',
 }
 
 /** Create a rendered <table> element from TableModel */
 export function renderStaticTable(data: TableModel): HTMLTableElement {
   const table = document.createElement('table')
-  table.className = 'fastmd-table'
+  table.className = 'veloxmd-table'
 
   // <thead>
   const thead = document.createElement('thead')

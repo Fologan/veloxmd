@@ -52,7 +52,7 @@
   "bugs": {
     "url": "https://github.com/Fologan/veloxmd/issues"
   },
-  "homepage": "https://fastmd.vercel.app",
+  "homepage": "https://veloxmd.vercel.app",
   "devDependencies": {
     "happy-dom": "^20.8.9",
     "tsup": "^8.0.0",

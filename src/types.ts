@@ -1,5 +1,5 @@
 // =============================================================================
-// FastMD Types — shared across base and plus modules
+// VeloxMD Types — shared across base and plus modules
 // =============================================================================
 
 /** Block-level element types (base) */

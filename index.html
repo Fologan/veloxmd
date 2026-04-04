@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FastMD — Real-time Markdown Editor</title>
+  <title>VeloxMD — Real-time Markdown Editor</title>
   <link rel="stylesheet" href="/src/styles.css" />
   <style>
     :root {
-      --bg: var(--fastmd-bg, #ffffff);
-      --surface: var(--fastmd-surface, #f6f8fa);
-      --surface-2: var(--fastmd-surface-2, #eef1f5);
-      --border: var(--fastmd-border, #d1d9e0);
-      --border-bright: var(--fastmd-border-bright, #b8c0cc);
-      --text: var(--fastmd-text, #1f2328);
-      --text-bright: var(--fastmd-text-bright, #000000);
-      --text-muted: var(--fastmd-text-muted, #636c76);
-      --accent: var(--fastmd-accent, #0969da);
+      --bg: var(--veloxmd-bg, #ffffff);
+      --surface: var(--veloxmd-surface, #f6f8fa);
+      --surface-2: var(--veloxmd-surface-2, #eef1f5);
+      --border: var(--veloxmd-border, #d1d9e0);
+      --border-bright: var(--veloxmd-border-bright, #b8c0cc);
+      --text: var(--veloxmd-text, #1f2328);
+      --text-bright: var(--veloxmd-text-bright, #000000);
+      --text-muted: var(--veloxmd-text-muted, #636c76);
+      --accent: var(--veloxmd-accent, #0969da);
     }
 
     [data-theme="dark"] {
-      --bg: var(--fastmd-bg);
-      --surface: var(--fastmd-surface);
-      --surface-2: var(--fastmd-surface-2);
-      --border: var(--fastmd-border);
-      --border-bright: var(--fastmd-border-bright);
-      --text: var(--fastmd-text);
-      --text-bright: var(--fastmd-text-bright);
-      --text-muted: var(--fastmd-text-muted);
-      --accent: var(--fastmd-accent);
+      --bg: var(--veloxmd-bg);
+      --surface: var(--veloxmd-surface);
+      --surface-2: var(--veloxmd-surface-2);
+      --border: var(--veloxmd-border);
+      --border-bright: var(--veloxmd-border-bright);
+      --text: var(--veloxmd-text);
+      --text-bright: var(--veloxmd-text-bright);
+      --text-muted: var(--veloxmd-text-muted);
+      --accent: var(--veloxmd-accent);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -156,7 +156,7 @@
 </head>
 <body>
   <div class="header">
-    <h1><span class="a">Fast</span>MD <span class="badge">Live</span></h1>
+    <h1><span class="a">Velox</span>MD <span class="badge">Live</span></h1>
     <button id="load-sample" class="btn">Load sample</button>
     <button id="theme-toggle" class="btn">Dark mode</button>
     <button id="view-mode-toggle" class="btn">Hybrid mode</button>

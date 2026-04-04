@@ -1,5 +1,5 @@
 {
-  "name": "@fologan/fastmd",
+  "name": "veloxmd",
   "version": "0.1.0-alpha.4",
   "description": "In-place markdown editor. Zero dependencies. The text formats itself.",
   "type": "module",
@@ -43,18 +43,14 @@
     "zero-dependency",
     "lightweight"
   ],
-  "author": {
-    "name": "Charles Montero",
-    "email": "carlos@tvimperia.com",
-    "url": "https://tvimperia.com"
-  },
+  "author": "Fologan",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fologan/fastmd.git"
+    "url": "git+https://github.com/Fologan/veloxmd.git"
   },
   "bugs": {
-    "url": "https://github.com/Fologan/fastmd/issues"
+    "url": "https://github.com/Fologan/veloxmd/issues"
   },
   "homepage": "https://fastmd.vercel.app",
   "devDependencies": {

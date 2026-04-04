@@ -50,17 +50,17 @@ function injectStyles(): void {
   styleInjected = true
 
   const css = `
-/* FastMD Table Toolbar — floating bar */
-.fastmd-table-toolbar {
+/* VeloxMD Table Toolbar — floating bar */
+.veloxmd-table-toolbar {
   position: absolute;
   z-index: 900;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  background: var(--fastmd-toolbar-bg, #ffffff);
-  border: 1px solid var(--fastmd-toolbar-border, #e1e4e8);
-  border-radius: var(--fastmd-toolbar-radius, 6px);
-  box-shadow: var(--fastmd-toolbar-dropdown-shadow, 0 2px 8px rgba(0,0,0,0.12));
+  background: var(--veloxmd-toolbar-bg, #ffffff);
+  border: 1px solid var(--veloxmd-toolbar-border, #e1e4e8);
+  border-radius: var(--veloxmd-toolbar-radius, 6px);
+  box-shadow: var(--veloxmd-toolbar-dropdown-shadow, 0 2px 8px rgba(0,0,0,0.12));
   padding: 4px 6px;
   gap: 2px;
   user-select: none;
@@ -71,29 +71,29 @@ function injectStyles(): void {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.fastmd-table-toolbar.visible {
+.veloxmd-table-toolbar.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* Groups */
-.fastmd-table-toolbar-group {
+.veloxmd-table-toolbar-group {
   display: inline-flex;
   align-items: center;
   gap: 1px;
 }
 
 /* Separator */
-.fastmd-table-toolbar-sep {
+.veloxmd-table-toolbar-sep {
   width: 1px;
   height: 18px;
-  background: var(--fastmd-toolbar-separator, #d1d5da);
+  background: var(--veloxmd-toolbar-separator, #d1d5da);
   margin: 0 4px;
   flex-shrink: 0;
 }
 
 /* Buttons */
-.fastmd-table-toolbar-btn {
+.veloxmd-table-toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -102,7 +102,7 @@ function injectStyles(): void {
   padding: 0 6px;
   border: none;
   background: transparent;
-  color: var(--fastmd-toolbar-text, #24292e);
+  color: var(--veloxmd-toolbar-text, #24292e);
   cursor: pointer;
   border-radius: 4px;
   font-size: 12px;
@@ -112,62 +112,62 @@ function injectStyles(): void {
   transition: background 0.12s ease;
 }
 
-.fastmd-table-toolbar-btn:hover {
-  background: var(--fastmd-toolbar-button-hover, #f0f1f3);
+.veloxmd-table-toolbar-btn:hover {
+  background: var(--veloxmd-toolbar-button-hover, #f0f1f3);
 }
 
-.fastmd-table-toolbar-btn:active {
-  background: var(--fastmd-toolbar-button-active, #e1e4e8);
+.veloxmd-table-toolbar-btn:active {
+  background: var(--veloxmd-toolbar-button-active, #e1e4e8);
 }
 
-.fastmd-table-toolbar-btn.add {
-  color: var(--fastmd-green, #1a7f37);
+.veloxmd-table-toolbar-btn.add {
+  color: var(--veloxmd-green, #1a7f37);
 }
 
-.fastmd-table-toolbar-btn.destructive {
-  color: var(--fastmd-red, #cf222e);
+.veloxmd-table-toolbar-btn.destructive {
+  color: var(--veloxmd-red, #cf222e);
 }
 
-.fastmd-table-toolbar-btn.copy {
-  color: var(--fastmd-orange, #bc4c00);
+.veloxmd-table-toolbar-btn.copy {
+  color: var(--veloxmd-orange, #bc4c00);
 }
 
 /* Alignment select */
-.fastmd-table-toolbar-align {
+.veloxmd-table-toolbar-align {
   display: inline-flex;
   align-items: center;
   gap: 2px;
 }
 
-.fastmd-table-toolbar-align-label {
+.veloxmd-table-toolbar-align-label {
   font-size: 10px;
   font-weight: 600;
-  color: var(--fastmd-text-muted, #636c76);
+  color: var(--veloxmd-text-muted, #636c76);
   margin-right: 2px;
 }
 
-.fastmd-table-toolbar-align select {
+.veloxmd-table-toolbar-align select {
   height: 24px;
   padding: 0 2px;
-  border: 1px solid var(--fastmd-toolbar-border, #e1e4e8);
+  border: 1px solid var(--veloxmd-toolbar-border, #e1e4e8);
   border-radius: 4px;
-  background: var(--fastmd-toolbar-bg, #ffffff);
-  color: var(--fastmd-toolbar-text, #24292e);
+  background: var(--veloxmd-toolbar-bg, #ffffff);
+  color: var(--veloxmd-toolbar-text, #24292e);
   font-size: 11px;
   cursor: pointer;
   min-width: 36px;
 }
 
-.fastmd-table-toolbar-align select:focus-visible {
-  outline: 2px solid var(--fastmd-accent, #0969da);
+.veloxmd-table-toolbar-align select:focus-visible {
+  outline: 2px solid var(--veloxmd-accent, #0969da);
   outline-offset: 1px;
 }
 
 /* Cell indicator */
-.fastmd-table-toolbar-cell {
+.veloxmd-table-toolbar-cell {
   font-size: 11px;
   font-weight: 600;
-  color: var(--fastmd-text-muted, #636c76);
+  color: var(--veloxmd-text-muted, #636c76);
   padding: 0 6px;
   white-space: nowrap;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
@@ -175,17 +175,17 @@ function injectStyles(): void {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .fastmd-table-toolbar {
+  .veloxmd-table-toolbar {
     transition: none;
   }
-  .fastmd-table-toolbar-btn {
+  .veloxmd-table-toolbar-btn {
     transition: none;
   }
 }
 
 /* Print */
 @media print {
-  .fastmd-table-toolbar {
+  .veloxmd-table-toolbar {
     display: none !important;
   }
 }
@@ -212,7 +212,7 @@ export class TableToolbar {
     injectStyles()
 
     const el = document.createElement('div')
-    el.className = 'fastmd-table-toolbar'
+    el.className = 'veloxmd-table-toolbar'
     el.setAttribute('role', 'toolbar')
     el.setAttribute('aria-label', 'Table editing toolbar')
 
@@ -221,8 +221,8 @@ export class TableToolbar {
     container.appendChild(el)
     this.el = el
 
-    this.cellIndicator = el.querySelector('.fastmd-table-toolbar-cell')!
-    this.alignContainer = el.querySelector('.fastmd-table-toolbar-align')!
+    this.cellIndicator = el.querySelector('.veloxmd-table-toolbar-cell')!
+    this.alignContainer = el.querySelector('.veloxmd-table-toolbar-align')!
 
     // Delegated event handler — preventDefault keeps editor focus
     el.addEventListener('mousedown', this.onMouseDown)
@@ -281,12 +281,12 @@ export class TableToolbar {
   updateAlignments(alignments: TableAlign[]): void {
     const container = this.alignContainer
     // Keep the label, rebuild selects
-    const label = container.querySelector('.fastmd-table-toolbar-align-label')
+    const label = container.querySelector('.veloxmd-table-toolbar-align-label')
     container.innerHTML = ''
     if (label) container.appendChild(label)
     else {
       const lbl = document.createElement('span')
-      lbl.className = 'fastmd-table-toolbar-align-label'
+      lbl.className = 'veloxmd-table-toolbar-align-label'
       lbl.textContent = 'Align:'
       container.appendChild(lbl)
     }
@@ -326,45 +326,45 @@ export class TableToolbar {
     let html = ''
 
     // Add buttons (green)
-    html += '<div class="fastmd-table-toolbar-group">'
+    html += '<div class="veloxmd-table-toolbar-group">'
     for (const [action, label, title] of ADD_BTNS) {
-      html += `<button class="fastmd-table-toolbar-btn add" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
+      html += `<button class="veloxmd-table-toolbar-btn add" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
     }
     html += '</div>'
 
     // Delete buttons (red)
-    html += '<div class="fastmd-table-toolbar-group">'
+    html += '<div class="veloxmd-table-toolbar-group">'
     for (const [action, label, title] of DEL_BTNS) {
-      html += `<button class="fastmd-table-toolbar-btn destructive" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
+      html += `<button class="veloxmd-table-toolbar-btn destructive" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
     }
     html += '</div>'
 
     // Separator
-    html += '<div class="fastmd-table-toolbar-sep" role="separator"></div>'
+    html += '<div class="veloxmd-table-toolbar-sep" role="separator"></div>'
 
     // Sort buttons
-    html += '<div class="fastmd-table-toolbar-group">'
+    html += '<div class="veloxmd-table-toolbar-group">'
     for (const [action, label, title] of SORT_BTNS) {
-      html += `<button class="fastmd-table-toolbar-btn" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
+      html += `<button class="veloxmd-table-toolbar-btn" data-action="${action}" title="${title}" aria-label="${title}">${label}</button>`
     }
     html += '</div>'
 
     // Separator
-    html += '<div class="fastmd-table-toolbar-sep" role="separator"></div>'
+    html += '<div class="veloxmd-table-toolbar-sep" role="separator"></div>'
 
     // Alignment dropdowns (populated dynamically)
-    html += '<div class="fastmd-table-toolbar-align">'
-    html += '<span class="fastmd-table-toolbar-align-label">Align:</span>'
+    html += '<div class="veloxmd-table-toolbar-align">'
+    html += '<span class="veloxmd-table-toolbar-align-label">Align:</span>'
     html += '</div>'
 
     // Separator
-    html += '<div class="fastmd-table-toolbar-sep" role="separator"></div>'
+    html += '<div class="veloxmd-table-toolbar-sep" role="separator"></div>'
 
     // Copy button
-    html += `<button class="fastmd-table-toolbar-btn copy" data-action="copy" title="Copy table to clipboard" aria-label="Copy table to clipboard">Copy</button>`
+    html += `<button class="veloxmd-table-toolbar-btn copy" data-action="copy" title="Copy table to clipboard" aria-label="Copy table to clipboard">Copy</button>`
 
     // Cell indicator
-    html += '<div class="fastmd-table-toolbar-cell" title="Current cell">-- --</div>'
+    html += '<div class="veloxmd-table-toolbar-cell" title="Current cell">-- --</div>'
 
     return html
   }

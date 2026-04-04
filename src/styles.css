@@ -1,98 +1,98 @@
 /* =========================================================================
-   FastMD — In-place Markdown Editor Styles
+   VeloxMD — In-place Markdown Editor Styles
    The text formats itself. No split view. Just write.
 
-   CSS variables use the --fastmd- prefix to avoid collisions.
+   CSS variables use the --veloxmd- prefix to avoid collisions.
    Override them on your container or :root to customize the theme.
    ========================================================================= */
 
 /* Light theme (default) */
 :root {
-  --fastmd-bg: #ffffff;
-  --fastmd-surface: #f6f8fa;
-  --fastmd-surface-2: #eef1f5;
-  --fastmd-border: #d1d9e0;
-  --fastmd-border-bright: #b8c0cc;
-  --fastmd-text: #1f2328;
-  --fastmd-text-bright: #000000;
-  --fastmd-text-muted: #636c76;
-  --fastmd-syntax: #a0a8b4;
-  --fastmd-accent: #0969da;
-  --fastmd-green: #1a7f37;
-  --fastmd-purple: #8250df;
-  --fastmd-red: #cf222e;
-  --fastmd-orange: #bc4c00;
+  --veloxmd-bg: #ffffff;
+  --veloxmd-surface: #f6f8fa;
+  --veloxmd-surface-2: #eef1f5;
+  --veloxmd-border: #d1d9e0;
+  --veloxmd-border-bright: #b8c0cc;
+  --veloxmd-text: #1f2328;
+  --veloxmd-text-bright: #000000;
+  --veloxmd-text-muted: #636c76;
+  --veloxmd-syntax: #a0a8b4;
+  --veloxmd-accent: #0969da;
+  --veloxmd-green: #1a7f37;
+  --veloxmd-purple: #8250df;
+  --veloxmd-red: #cf222e;
+  --veloxmd-orange: #bc4c00;
 
   /* Details */
-  --fastmd-details-tag-color: var(--fastmd-text-muted);
-  --fastmd-details-tag-opacity: 0.7;
-  --fastmd-details-summary-color: var(--fastmd-accent);
-  --fastmd-details-summary-weight: 600;
-  --fastmd-details-toggle-opacity: 0.7;
-  --fastmd-details-content-border: var(--fastmd-accent);
-  --fastmd-details-content-opacity: 0.9;
+  --veloxmd-details-tag-color: var(--veloxmd-text-muted);
+  --veloxmd-details-tag-opacity: 0.7;
+  --veloxmd-details-summary-color: var(--veloxmd-accent);
+  --veloxmd-details-summary-weight: 600;
+  --veloxmd-details-toggle-opacity: 0.7;
+  --veloxmd-details-content-border: var(--veloxmd-accent);
+  --veloxmd-details-content-opacity: 0.9;
 
   /* Table (rendered) */
-  --fastmd-table-header-bg: var(--fastmd-surface-2);
-  --fastmd-table-header-color: var(--fastmd-text-bright);
-  --fastmd-table-border: var(--fastmd-border);
-  --fastmd-table-row-even: var(--fastmd-surface);
-  --fastmd-table-row-hover: rgba(9, 105, 218, 0.06);
+  --veloxmd-table-header-bg: var(--veloxmd-surface-2);
+  --veloxmd-table-header-color: var(--veloxmd-text-bright);
+  --veloxmd-table-border: var(--veloxmd-border);
+  --veloxmd-table-row-even: var(--veloxmd-surface);
+  --veloxmd-table-row-hover: rgba(9, 105, 218, 0.06);
 
   /* Toolbar */
-  --fastmd-toolbar-bg: #ffffff;
-  --fastmd-toolbar-border: #e1e4e8;
-  --fastmd-toolbar-text: #24292e;
-  --fastmd-toolbar-button-hover: #f0f1f3;
-  --fastmd-toolbar-button-active: #e1e4e8;
-  --fastmd-toolbar-separator: #d1d5da;
-  --fastmd-toolbar-radius: 6px;
-  --fastmd-toolbar-dropdown-bg: #ffffff;
-  --fastmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  --veloxmd-toolbar-bg: #ffffff;
+  --veloxmd-toolbar-border: #e1e4e8;
+  --veloxmd-toolbar-text: #24292e;
+  --veloxmd-toolbar-button-hover: #f0f1f3;
+  --veloxmd-toolbar-button-active: #e1e4e8;
+  --veloxmd-toolbar-separator: #d1d5da;
+  --veloxmd-toolbar-radius: 6px;
+  --veloxmd-toolbar-dropdown-bg: #ffffff;
+  --veloxmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 /* Dark theme — add [data-theme="dark"] to any ancestor or :root */
 [data-theme="dark"] {
-  --fastmd-bg: #0a0e17;
-  --fastmd-surface: #0d1117;
-  --fastmd-surface-2: #161b22;
-  --fastmd-border: #21262d;
-  --fastmd-border-bright: #30363d;
-  --fastmd-text: #c9d1d9;
-  --fastmd-text-bright: #e6edf3;
-  --fastmd-text-muted: #7d8590;
-  --fastmd-syntax: #484f58;
-  --fastmd-accent: #58a6ff;
-  --fastmd-green: #3fb950;
-  --fastmd-purple: #d2a8ff;
-  --fastmd-red: #ff7b72;
-  --fastmd-orange: #ffa657;
+  --veloxmd-bg: #0a0e17;
+  --veloxmd-surface: #0d1117;
+  --veloxmd-surface-2: #161b22;
+  --veloxmd-border: #21262d;
+  --veloxmd-border-bright: #30363d;
+  --veloxmd-text: #c9d1d9;
+  --veloxmd-text-bright: #e6edf3;
+  --veloxmd-text-muted: #7d8590;
+  --veloxmd-syntax: #484f58;
+  --veloxmd-accent: #58a6ff;
+  --veloxmd-green: #3fb950;
+  --veloxmd-purple: #d2a8ff;
+  --veloxmd-red: #ff7b72;
+  --veloxmd-orange: #ffa657;
 
   /* Details */
-  --fastmd-details-tag-color: var(--fastmd-text-muted);
-  --fastmd-details-tag-opacity: 0.7;
-  --fastmd-details-summary-color: var(--fastmd-accent);
-  --fastmd-details-summary-weight: 600;
-  --fastmd-details-toggle-opacity: 0.7;
-  --fastmd-details-content-border: var(--fastmd-accent);
-  --fastmd-details-content-opacity: 0.9;
+  --veloxmd-details-tag-color: var(--veloxmd-text-muted);
+  --veloxmd-details-tag-opacity: 0.7;
+  --veloxmd-details-summary-color: var(--veloxmd-accent);
+  --veloxmd-details-summary-weight: 600;
+  --veloxmd-details-toggle-opacity: 0.7;
+  --veloxmd-details-content-border: var(--veloxmd-accent);
+  --veloxmd-details-content-opacity: 0.9;
 
   /* Table (rendered) */
-  --fastmd-table-header-bg: var(--fastmd-surface-2);
-  --fastmd-table-header-color: var(--fastmd-text-bright);
-  --fastmd-table-border: var(--fastmd-border);
-  --fastmd-table-row-even: var(--fastmd-surface);
-  --fastmd-table-row-hover: rgba(88, 166, 255, 0.06);
+  --veloxmd-table-header-bg: var(--veloxmd-surface-2);
+  --veloxmd-table-header-color: var(--veloxmd-text-bright);
+  --veloxmd-table-border: var(--veloxmd-border);
+  --veloxmd-table-row-even: var(--veloxmd-surface);
+  --veloxmd-table-row-hover: rgba(88, 166, 255, 0.06);
 
   /* Toolbar */
-  --fastmd-toolbar-bg: #1e1e1e;
-  --fastmd-toolbar-border: #333333;
-  --fastmd-toolbar-text: #d4d4d4;
-  --fastmd-toolbar-button-hover: #2a2a2a;
-  --fastmd-toolbar-button-active: #333333;
-  --fastmd-toolbar-separator: #444444;
-  --fastmd-toolbar-dropdown-bg: #252525;
-  --fastmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --veloxmd-toolbar-bg: #1e1e1e;
+  --veloxmd-toolbar-border: #333333;
+  --veloxmd-toolbar-text: #d4d4d4;
+  --veloxmd-toolbar-button-hover: #2a2a2a;
+  --veloxmd-toolbar-button-active: #333333;
+  --veloxmd-toolbar-separator: #444444;
+  --veloxmd-toolbar-dropdown-bg: #252525;
+  --veloxmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 /* ---- Live Editor ---- */
@@ -101,14 +101,14 @@
   outline: none;
   font-size: 16px;
   line-height: 1.85;
-  color: var(--fastmd-text);
-  caret-color: var(--fastmd-accent);
+  color: var(--veloxmd-text);
+  caret-color: var(--veloxmd-accent);
   min-height: 300px;
 }
 
 .live-editor:empty::before {
   content: attr(data-placeholder);
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   pointer-events: none;
   opacity: 0.6;
 }
@@ -132,7 +132,7 @@
    They "activate" (brighten) when the cursor is on their line. */
 
 .live-line .syntax {
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   opacity: 0.7;
   transition: opacity 0.2s ease, color 0.2s ease;
   font-weight: normal;
@@ -185,27 +185,27 @@
 .live-h1 {
   font-size: 2em;
   font-weight: 700;
-  color: var(--fastmd-text-bright);
+  color: var(--veloxmd-text-bright);
   padding-bottom: 6px;
   margin-bottom: 2px;
-  border-bottom: 2px solid var(--fastmd-accent);
+  border-bottom: 2px solid var(--veloxmd-accent);
 }
 .live-h2 {
   font-size: 1.5em;
   font-weight: 700;
-  color: var(--fastmd-text-bright);
+  color: var(--veloxmd-text-bright);
   padding-bottom: 4px;
   margin-bottom: 2px;
-  border-bottom: 1px solid var(--fastmd-border);
+  border-bottom: 1px solid var(--veloxmd-border);
 }
 .live-h3 {
   font-size: 1.25em;
   font-weight: 700;
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
 }
-.live-h4 { font-size: 1.1em; font-weight: 600; color: var(--fastmd-text-bright); }
-.live-h5 { font-size: 1em; font-weight: 600; color: var(--fastmd-text-bright); }
-.live-h6 { font-size: 0.95em; font-weight: 600; color: var(--fastmd-text-muted); }
+.live-h4 { font-size: 1.1em; font-weight: 600; color: var(--veloxmd-text-bright); }
+.live-h5 { font-size: 1em; font-weight: 600; color: var(--veloxmd-text-bright); }
+.live-h6 { font-size: 0.95em; font-weight: 600; color: var(--veloxmd-text-muted); }
 
 /* Heading syntax markers */
 .live-h1 .syntax,
@@ -218,42 +218,42 @@
 /* ---- Inline formatting ---- */
 
 .live-line strong {
-  color: var(--fastmd-text-bright);
+  color: var(--veloxmd-text-bright);
   font-weight: 700;
 }
 
 .live-line em {
-  color: var(--fastmd-purple);
+  color: var(--veloxmd-purple);
 }
 
 .live-line strong em {
-  color: var(--fastmd-purple);
+  color: var(--veloxmd-purple);
 }
 
 .live-line code {
   font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
   font-size: 0.88em;
-  background: var(--fastmd-surface-2);
-  color: var(--fastmd-red);
+  background: var(--veloxmd-surface-2);
+  color: var(--veloxmd-red);
   padding: 1px 5px;
   border-radius: 3px;
-  border: 1px solid var(--fastmd-border);
+  border: 1px solid var(--veloxmd-border);
 }
 
 .live-line del {
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   text-decoration: line-through;
 }
 
 .live-link-text {
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
   text-decoration: underline;
   text-decoration-color: rgba(88, 166, 255, 0.3);
   text-underline-offset: 2px;
 }
 
 .live-link-url {
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   font-size: 0.85em;
   opacity: 0.6;
 }
@@ -261,13 +261,13 @@
 /* ---- Blockquote ---- */
 
 .live-blockquote {
-  border-left: 3px solid var(--fastmd-green);
+  border-left: 3px solid var(--veloxmd-green);
   padding-left: 16px;
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
 }
 
 .live-blockquote .syntax {
-  color: var(--fastmd-green);
+  color: var(--veloxmd-green);
   opacity: 0.4;
 }
 
@@ -280,7 +280,7 @@
 
 .live-ul > .syntax,
 .live-ol > .syntax {
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
   opacity: 0.7 !important;
   font-weight: 600;
 }
@@ -290,7 +290,7 @@
 .live-code-fence {
   font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
   font-size: 0.85em;
-  color: var(--fastmd-syntax);
+  color: var(--veloxmd-syntax);
   opacity: 0.5;
   padding: 2px 4px;
 }
@@ -298,11 +298,11 @@
 .live-code-line {
   font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
   font-size: 0.88em;
-  background: var(--fastmd-surface);
-  color: var(--fastmd-text);
+  background: var(--veloxmd-surface);
+  color: var(--veloxmd-text);
   padding: 0 12px;
   margin-left: 4px;
-  border-left: 2px solid var(--fastmd-border-bright);
+  border-left: 2px solid var(--veloxmd-border-bright);
 }
 
 .live-code-line code {
@@ -316,7 +316,7 @@
 /* ---- Horizontal rule ---- */
 
 .live-hr {
-  color: var(--fastmd-syntax);
+  color: var(--veloxmd-syntax);
   opacity: 0.3;
   text-align: center;
   position: relative;
@@ -330,7 +330,7 @@
   right: 0;
   top: 50%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--fastmd-accent) 20%, var(--fastmd-accent) 80%, transparent);
+  background: linear-gradient(90deg, transparent, var(--veloxmd-accent) 20%, var(--veloxmd-accent) 80%, transparent);
   opacity: 0.25;
   pointer-events: none;
 }
@@ -341,30 +341,30 @@
 .live-table-row {
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.92em;
-  background: var(--fastmd-surface);
+  background: var(--veloxmd-surface);
   padding: 2px 4px;
-  border-left: 2px solid var(--fastmd-accent);
+  border-left: 2px solid var(--veloxmd-accent);
   margin-left: 4px;
 }
 
 .live-table-header {
   font-weight: 700;
-  color: var(--fastmd-text-bright);
-  border-left-color: var(--fastmd-accent);
+  color: var(--veloxmd-text-bright);
+  border-left-color: var(--veloxmd-accent);
 }
 
 .live-table-separator {
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.85em;
-  color: var(--fastmd-syntax);
+  color: var(--veloxmd-syntax);
   opacity: 0.35;
-  border-left: 2px solid var(--fastmd-accent);
+  border-left: 2px solid var(--veloxmd-accent);
   margin-left: 4px;
   padding: 0 4px;
 }
 
 .live-table-row {
-  border-left-color: var(--fastmd-border-bright);
+  border-left-color: var(--veloxmd-border-bright);
 }
 
 /* ---- Task lists ---- */
@@ -375,11 +375,11 @@
 
 .live-checkbox {
   font-weight: 700;
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
 }
 
 .live-checked {
-  color: var(--fastmd-green);
+  color: var(--veloxmd-green);
 }
 
 /* ---- Nested blockquotes ---- */
@@ -390,7 +390,7 @@
 /* ---- Alt headings ---- */
 
 .live-alt-heading-marker {
-  color: var(--fastmd-syntax);
+  color: var(--veloxmd-syntax);
   opacity: 0.25;
   font-size: 0.7em;
 }
@@ -398,31 +398,31 @@
 /* ---- Footnotes ---- */
 
 .live-footnote-ref {
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
   font-size: 0.8em;
 }
 
 .live-footnote-def {
   padding-left: 16px;
-  border-left: 2px solid var(--fastmd-purple);
-  color: var(--fastmd-text-muted);
+  border-left: 2px solid var(--veloxmd-purple);
+  color: var(--veloxmd-text-muted);
   font-size: 0.92em;
 }
 
 .live-footnote-label {
-  color: var(--fastmd-purple);
+  color: var(--veloxmd-purple);
   font-weight: 600;
 }
 
 /* ---- Reference links ---- */
 
 .live-ref-label {
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   font-size: 0.85em;
 }
 
 .live-link-title {
-  color: var(--fastmd-text-muted);
+  color: var(--veloxmd-text-muted);
   font-style: italic;
   font-size: 0.9em;
 }
@@ -430,7 +430,7 @@
 /* ---- Autolinks ---- */
 
 .live-autolink {
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
   text-decoration: underline;
   text-decoration-color: rgba(88, 166, 255, 0.3);
 }
@@ -438,8 +438,8 @@
 /* ---- HTML inline ---- */
 
 .live-html-tag {
-  color: var(--fastmd-details-tag-color);
-  opacity: var(--fastmd-details-tag-opacity);
+  color: var(--veloxmd-details-tag-color);
+  opacity: var(--veloxmd-details-tag-opacity);
 }
 
 /* When focused in hybrid, html tags should be inline to preserve line alignment */
@@ -451,12 +451,12 @@
 .live-line kbd {
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.85em;
-  background: var(--fastmd-surface-2);
-  color: var(--fastmd-text-bright);
+  background: var(--veloxmd-surface-2);
+  color: var(--veloxmd-text-bright);
   padding: 1px 6px;
-  border: 1px solid var(--fastmd-border-bright);
+  border: 1px solid var(--veloxmd-border-bright);
   border-radius: 4px;
-  box-shadow: 0 1px 0 var(--fastmd-border);
+  box-shadow: 0 1px 0 var(--veloxmd-border);
 }
 
 .live-line mark {
@@ -473,20 +473,20 @@
 
 .live-line u {
   text-decoration: underline;
-  text-decoration-color: var(--fastmd-text-muted);
+  text-decoration-color: var(--veloxmd-text-muted);
   text-underline-offset: 2px;
 }
 
 .live-line sup {
   font-size: 0.75em;
   vertical-align: super;
-  color: var(--fastmd-accent);
+  color: var(--veloxmd-accent);
 }
 
 .live-line sub {
   font-size: 0.75em;
   vertical-align: sub;
-  color: var(--fastmd-orange);
+  color: var(--veloxmd-orange);
 }
 
 /* ---- Math ---- */
@@ -494,7 +494,7 @@
 .live-math {
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-style: italic;
-  color: var(--fastmd-orange);
+  color: var(--veloxmd-orange);
 }
 
 /* ---- Hard break ---- */
@@ -512,7 +512,7 @@
 /* ---- HTML comment ---- */
 
 .live-comment {
-  color: var(--fastmd-syntax);
+  color: var(--veloxmd-syntax);
   opacity: 0.25;
   font-style: italic;
 }
@@ -520,19 +520,19 @@
 /* ---- Details ---- */
 
 .live-details-fence {
-  color: var(--fastmd-details-tag-color);
-  opacity: var(--fastmd-details-tag-opacity);
+  color: var(--veloxmd-details-tag-color);
+  opacity: var(--veloxmd-details-tag-opacity);
 }
 
 .live-details-summary {
-  color: var(--fastmd-details-summary-color);
-  font-weight: var(--fastmd-details-summary-weight);
+  color: var(--veloxmd-details-summary-color);
+  font-weight: var(--veloxmd-details-summary-weight);
 }
 
 .live-details-toggle {
   cursor: pointer;
   user-select: none;
-  opacity: var(--fastmd-details-toggle-opacity);
+  opacity: var(--veloxmd-details-toggle-opacity);
   margin-right: 2px;
   transition: opacity 0.15s;
 }
@@ -542,10 +542,10 @@
 }
 
 .live-details-content {
-  border-left: 2px solid var(--fastmd-details-content-border);
+  border-left: 2px solid var(--veloxmd-details-content-border);
   margin-left: 8px;
   padding-left: 12px;
-  opacity: var(--fastmd-details-content-opacity);
+  opacity: var(--veloxmd-details-content-opacity);
 }
 
 /* ---- Details viewer (static) ---- */
@@ -556,8 +556,8 @@
 
 .live-viewer-summary {
   cursor: pointer;
-  font-weight: var(--fastmd-details-summary-weight);
-  color: var(--fastmd-details-summary-color);
+  font-weight: var(--veloxmd-details-summary-weight);
+  color: var(--veloxmd-details-summary-color);
   user-select: none;
 }
 
@@ -567,42 +567,42 @@
 
 /* ---- Rendered table (static & hybrid overlay) ---- */
 
-.fastmd-table {
+.veloxmd-table {
   border-collapse: collapse;
   width: auto;
   margin: 4px 0;
   font-size: 0.92em;
 }
 
-.fastmd-table th,
-.fastmd-table td {
-  border: 1px solid var(--fastmd-table-border);
+.veloxmd-table th,
+.veloxmd-table td {
+  border: 1px solid var(--veloxmd-table-border);
   padding: 8px 14px;
   text-align: left;
 }
 
-.fastmd-table th {
-  background: var(--fastmd-table-header-bg);
-  color: var(--fastmd-table-header-color);
+.veloxmd-table th {
+  background: var(--veloxmd-table-header-bg);
+  color: var(--veloxmd-table-header-color);
   font-weight: 700;
 }
 
-.fastmd-table tbody tr:nth-child(even) td {
-  background: var(--fastmd-table-row-even);
+.veloxmd-table tbody tr:nth-child(even) td {
+  background: var(--veloxmd-table-row-even);
 }
 
-.fastmd-table tbody tr:hover td {
-  background: var(--fastmd-table-row-hover);
+.veloxmd-table tbody tr:hover td {
+  background: var(--veloxmd-table-row-hover);
 }
 
-.fastmd-align-center { text-align: center; }
-.fastmd-align-right { text-align: right; }
-.fastmd-align-left { text-align: left; }
+.veloxmd-align-center { text-align: center; }
+.veloxmd-align-right { text-align: right; }
+.veloxmd-align-left { text-align: left; }
 
 /* ---- Image preview ---- */
 
 .live-image-alt {
-  color: var(--fastmd-green);
+  color: var(--veloxmd-green);
   font-style: italic;
 }
 
@@ -617,7 +617,7 @@
   max-width: 100%;
   max-height: 300px;
   border-radius: 6px;
-  border: 1px solid var(--fastmd-border);
+  border: 1px solid var(--veloxmd-border);
   object-fit: contain;
 }
 
@@ -674,26 +674,27 @@
 }
 
 /* =========================================================================
-   FastMD — Toolbar Styles
+   VeloxMD — Toolbar Styles
    ========================================================================= */
 
 /* ---- Wrapper ---- */
 
-.fastmd-wrapper {
+.veloxmd-wrapper {
   display: flex;
   flex-direction: column;
   border-radius: inherit;
   overflow: hidden;
+  position: relative;
 }
 
 /* ---- Toolbar bar ---- */
 
-.fastmd-toolbar {
+.veloxmd-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  background: var(--fastmd-toolbar-bg);
-  border-bottom: 1px solid var(--fastmd-toolbar-border);
+  background: var(--veloxmd-toolbar-bg);
+  border-bottom: 1px solid var(--veloxmd-toolbar-border);
   padding: 6px 8px;
   gap: 2px;
   user-select: none;
@@ -701,7 +702,7 @@
 
 /* ---- Toolbar group ---- */
 
-.fastmd-toolbar-group {
+.veloxmd-toolbar-group {
   display: inline-flex;
   align-items: center;
   gap: 1px;
@@ -709,7 +710,7 @@
 
 /* ---- Toolbar button ---- */
 
-.fastmd-toolbar-btn {
+.veloxmd-toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -718,7 +719,7 @@
   padding: 0 4px;
   border: none;
   background: transparent;
-  color: var(--fastmd-toolbar-text);
+  color: var(--veloxmd-toolbar-text);
   cursor: pointer;
   border-radius: 4px;
   font-size: 14px;
@@ -726,21 +727,21 @@
   transition: background 0.15s ease;
 }
 
-.fastmd-toolbar-btn:hover {
-  background: var(--fastmd-toolbar-button-hover);
+.veloxmd-toolbar-btn:hover {
+  background: var(--veloxmd-toolbar-button-hover);
 }
 
-.fastmd-toolbar-btn:active {
-  background: var(--fastmd-toolbar-button-active);
+.veloxmd-toolbar-btn:active {
+  background: var(--veloxmd-toolbar-button-active);
 }
 
-.fastmd-toolbar-btn:focus-visible {
-  outline: 2px solid var(--fastmd-accent);
+.veloxmd-toolbar-btn:focus-visible {
+  outline: 2px solid var(--veloxmd-accent);
   outline-offset: 1px;
 }
 
-.fastmd-toolbar-btn:disabled,
-.fastmd-toolbar-btn[disabled] {
+.veloxmd-toolbar-btn:disabled,
+.veloxmd-toolbar-btn[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
   pointer-events: none;
@@ -748,41 +749,41 @@
 
 /* ---- Button inline text styling ---- */
 
-.fastmd-toolbar-btn b { font-weight: 700; }
-.fastmd-toolbar-btn i { font-style: italic; }
-.fastmd-toolbar-btn u { text-decoration: underline; }
-.fastmd-toolbar-btn s { text-decoration: line-through; }
+.veloxmd-toolbar-btn b { font-weight: 700; }
+.veloxmd-toolbar-btn i { font-style: italic; }
+.veloxmd-toolbar-btn u { text-decoration: underline; }
+.veloxmd-toolbar-btn s { text-decoration: line-through; }
 
 /* ---- Toolbar separator ---- */
 
-.fastmd-toolbar-separator {
+.veloxmd-toolbar-separator {
   width: 1px;
   height: 18px;
-  background: var(--fastmd-toolbar-separator);
+  background: var(--veloxmd-toolbar-separator);
   margin: 0 4px;
   flex-shrink: 0;
 }
 
 /* ---- Dropdown and overflow containers ---- */
 
-.fastmd-toolbar-dropdown,
-.fastmd-toolbar-overflow {
+.veloxmd-toolbar-dropdown,
+.veloxmd-toolbar-overflow {
   position: relative;
   display: inline-flex;
 }
 
 /* ---- Dropdown menu and overflow menu (shared base) ---- */
 
-.fastmd-toolbar-dropdown-menu,
-.fastmd-toolbar-overflow-menu {
+.veloxmd-toolbar-dropdown-menu,
+.veloxmd-toolbar-overflow-menu {
   display: none;
   position: absolute;
   top: 100%;
   left: 0;
   flex-direction: column;
-  background: var(--fastmd-toolbar-dropdown-bg);
-  border: 1px solid var(--fastmd-toolbar-border);
-  box-shadow: var(--fastmd-toolbar-dropdown-shadow);
+  background: var(--veloxmd-toolbar-dropdown-bg);
+  border: 1px solid var(--veloxmd-toolbar-border);
+  box-shadow: var(--veloxmd-toolbar-dropdown-shadow);
   border-radius: 6px;
   padding: 4px;
   min-width: 140px;
@@ -790,15 +791,15 @@
   margin-top: 4px;
 }
 
-.fastmd-toolbar-dropdown.open > .fastmd-toolbar-dropdown-menu {
+.veloxmd-toolbar-dropdown.open > .veloxmd-toolbar-dropdown-menu {
   display: flex;
   flex-direction: column;
 }
 
 /* ---- Dropdown menu items ---- */
 
-.fastmd-toolbar-dropdown-menu [role="menuitem"],
-.fastmd-toolbar-overflow-menu [role="menuitem"] {
+.veloxmd-toolbar-dropdown-menu [role="menuitem"],
+.veloxmd-toolbar-overflow-menu [role="menuitem"] {
   display: block;
   width: 100%;
   padding: 6px 12px;
@@ -808,18 +809,18 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--fastmd-toolbar-text);
+  color: var(--veloxmd-toolbar-text);
   transition: background 0.12s ease;
 }
 
-.fastmd-toolbar-dropdown-menu [role="menuitem"]:hover,
-.fastmd-toolbar-overflow-menu [role="menuitem"]:hover {
-  background: var(--fastmd-toolbar-button-hover);
+.veloxmd-toolbar-dropdown-menu [role="menuitem"]:hover,
+.veloxmd-toolbar-overflow-menu [role="menuitem"]:hover {
+  background: var(--veloxmd-toolbar-button-hover);
 }
 
-.fastmd-toolbar-dropdown-menu [role="menuitem"]:focus-visible,
-.fastmd-toolbar-overflow-menu [role="menuitem"]:focus-visible {
-  outline: 2px solid var(--fastmd-accent);
+.veloxmd-toolbar-dropdown-menu [role="menuitem"]:focus-visible,
+.veloxmd-toolbar-overflow-menu [role="menuitem"]:focus-visible {
+  outline: 2px solid var(--veloxmd-accent);
   outline-offset: 1px;
 }
 
@@ -835,11 +836,11 @@
 
 /* ---- Overflow menu ---- */
 
-.fastmd-toolbar-overflow {
+.veloxmd-toolbar-overflow {
   display: none;
 }
 
-.fastmd-toolbar-overflow-menu {
+.veloxmd-toolbar-overflow-menu {
   right: 0;
   left: auto;
 }
@@ -847,12 +848,12 @@
 /* ---- Responsive — small screens ---- */
 
 @media (max-width: 480px) {
-  .fastmd-toolbar {
+  .veloxmd-toolbar {
     padding: 4px 6px;
     gap: 1px;
   }
 
-  .fastmd-toolbar-btn {
+  .veloxmd-toolbar-btn {
     min-width: 32px;
     height: 32px;
     font-size: 13px;
@@ -862,9 +863,9 @@
 /* ---- Accessibility — reduced motion ---- */
 
 @media (prefers-reduced-motion: reduce) {
-  .fastmd-toolbar-btn,
-  .fastmd-toolbar-dropdown-menu [role="menuitem"],
-  .fastmd-toolbar-overflow-menu [role="menuitem"] {
+  .veloxmd-toolbar-btn,
+  .veloxmd-toolbar-dropdown-menu [role="menuitem"],
+  .veloxmd-toolbar-overflow-menu [role="menuitem"] {
     transition: none;
   }
 }
@@ -872,7 +873,7 @@
 /* ---- Print ---- */
 
 @media print {
-  .fastmd-toolbar {
+  .veloxmd-toolbar {
     display: none;
   }
 }

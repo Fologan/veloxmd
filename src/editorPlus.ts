@@ -8,6 +8,7 @@ import { parseLiveDocumentPlus } from './parse-block-plus.js'
 import { createSegmentNodePlus, renderLineElementPlus } from './render-plus.js'
 import { extractTableData, renderStaticTable } from './table-render.js'
 import type { TableModel } from './table-engine.js'
+import { TableEditController } from './table-edit.js'
 
 const TABLE_LINE_CLASSES = new Set(['live-table-header', 'live-table-row', 'live-table-separator'])
 
@@ -15,6 +16,19 @@ export class LiveEditorPlus extends LiveEditor {
 
   // Track which details blocks are expanded (by summary line data-line)
   private expandedDetails = new Set<string>()
+  private tableEdit: TableEditController | null = null
+
+  private getTableEdit(): TableEditController {
+    if (!this.tableEdit) {
+      this.tableEdit = new TableEditController(this.wrapper)
+      this.tableEdit.onAction((action) => this.handleTableAction(action))
+      this.tableEdit.onNeedRerender((newLines) => this.applyTableLines(newLines))
+      this.root.addEventListener('beforeinput', () => {
+        if (this.tableEdit?.isActive()) this.tableEdit.snap(this.root)
+      })
+    }
+    return this.tableEdit
+  }
 
   protected override parseDocument(rawLines: string[]): LiveLine[] {
     return parseLiveDocumentPlus(rawLines)
@@ -26,6 +40,57 @@ export class LiveEditorPlus extends LiveEditor {
 
   protected override renderLine(line: LiveLine, index: number): HTMLElement {
     return renderLineElementPlus(line, index)
+  }
+
+  protected override onKeyDown(e: KeyboardEvent): void {
+    if (this.tableEdit?.isActive()) {
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        const range = this.tableEdit.navigateTab(e.shiftKey)
+        if (range) this._restoreCursorRange(range.start, range.end)
+        return
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        const newLines = this.tableEdit.insertRowBelow()
+        if (newLines) this.applyTableLines(newLines)
+        return
+      }
+      if (e.key === 'Escape') { e.preventDefault(); this.root.blur(); return }
+    }
+    super.onKeyDown(e)
+  }
+
+  protected override onInput(): void {
+    if (this.tableEdit?.isActive() && this.tableEdit.hasPendingSnap()) {
+      const pos = this.tableEdit.handleInput(this.root)
+      if (pos) {
+        // Update internal lines to match the DOM
+        this.readLines()
+        this.restoreCursor(pos)
+      }
+      return
+    }
+    super.onInput()
+  }
+
+  private handleTableAction(action: import('./table-edit.js').TableAction): void {
+    if (!this.tableEdit?.isActive()) return
+    const newLines = this.tableEdit.executeAction(action)
+    if (newLines) this.applyTableLines(newLines)
+  }
+
+  private applyTableLines(newLines: string[]): void {
+    if (!this.tableEdit?.getBlockRange()) return
+    const [start, end] = this.tableEdit.getBlockRange()!
+    const before = this.lines.slice(0, start)
+    const after = this.lines.slice(end)
+    this.lines = [...before, ...newLines, ...after]
+    this.renderAll()
+    // Re-activate the controller with updated block range
+    const newEnd = start + newLines.length
+    this.focusedBlockRange = [start, newEnd]
+    this.tableEdit.activate(this.root, [start, newEnd], newLines)
   }
 
   protected override renderAll(): void {
@@ -40,6 +105,19 @@ export class LiveEditorPlus extends LiveEditor {
   }
 
   protected override onBlockFocusChange(oldRange: [number, number] | null, newRange: [number, number] | null): void {
+    // Table edit controller — activate/deactivate on any mode
+    if (newRange) {
+      const newFirstEl = this.root.querySelector(`[data-line="${newRange[0]}"]`) as HTMLElement | null
+      if (newFirstEl?.classList.contains('live-table-header')) {
+        const rawLines = this.lines.slice(newRange[0], newRange[1])
+        this.getTableEdit().activate(this.root, newRange, rawLines)
+      } else {
+        this.tableEdit?.deactivate()
+      }
+    } else {
+      this.tableEdit?.deactivate()
+    }
+
     if (this.viewMode !== 'hybrid') return
 
     // When a details block gains focus, reveal all lines as source
@@ -85,7 +163,7 @@ export class LiveEditorPlus extends LiveEditor {
 
     const table = renderStaticTable(tableData)
     table.contentEditable = 'false'
-    table.classList.add('fastmd-table-overlay')
+    table.classList.add('veloxmd-table-overlay')
 
     const startLine = oldRange[0]
     table.addEventListener('mousedown', (e) => {
@@ -253,7 +331,7 @@ export class LiveEditorPlus extends LiveEditor {
           if (tableData.headers.length > 0) {
             const table = renderStaticTable(tableData)
             table.contentEditable = 'false'
-            table.classList.add('fastmd-table-overlay')
+            table.classList.add('veloxmd-table-overlay')
 
             // Click on overlay → focus the block (reveals source)
             table.addEventListener('mousedown', (e) => {

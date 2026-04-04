@@ -4,7 +4,7 @@ In-place markdown editor for the web. Zero dependencies. ~2KB gzipped.
 
 The text formats itself as you type — no split view, no separate preview pane. Markdown syntax markers stay in the DOM but fade to near-invisible, so what you see is what you get.
 
-**[Live Demo](https://fastmd.vercel.app)**
+**[Live Demo](https://veloxmd.vercel.app)**
 
 > **Alpha** — API may change between minor versions.
 
@@ -153,15 +153,15 @@ The toolbar uses its own set of CSS custom properties for easy customization:
 
 ```css
 .my-editor-container {
-  --fastmd-toolbar-bg: #ffffff;
-  --fastmd-toolbar-border: #e1e4e8;
-  --fastmd-toolbar-text: #24292e;
-  --fastmd-toolbar-button-hover: #f0f1f3;
-  --fastmd-toolbar-button-active: #e1e4e8;
-  --fastmd-toolbar-separator: #d1d5da;
-  --fastmd-toolbar-radius: 6px;
-  --fastmd-toolbar-dropdown-bg: #ffffff;
-  --fastmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  --veloxmd-toolbar-bg: #ffffff;
+  --veloxmd-toolbar-border: #e1e4e8;
+  --veloxmd-toolbar-text: #24292e;
+  --veloxmd-toolbar-button-hover: #f0f1f3;
+  --veloxmd-toolbar-button-active: #e1e4e8;
+  --veloxmd-toolbar-separator: #d1d5da;
+  --veloxmd-toolbar-radius: 6px;
+  --veloxmd-toolbar-dropdown-bg: #ffffff;
+  --veloxmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 ```
 
@@ -169,24 +169,24 @@ The toolbar is responsive — buttons that overflow are automatically moved to a
 
 ## Theming
 
-VeloxMD uses CSS custom properties prefixed with `--fastmd-`. Override them to match your app's design:
+VeloxMD uses CSS custom properties prefixed with `--veloxmd-`. Override them to match your app's design:
 
 ```css
 .my-editor-container {
-  --fastmd-bg: #1a1a2e;
-  --fastmd-text: #eaeaea;
-  --fastmd-text-bright: #ffffff;
-  --fastmd-text-muted: #888;
-  --fastmd-syntax: #555;
-  --fastmd-accent: #e94560;
-  --fastmd-green: #0f3460;
-  --fastmd-purple: #a855f7;
-  --fastmd-red: #ef4444;
-  --fastmd-orange: #f97316;
-  --fastmd-surface: #16213e;
-  --fastmd-surface-2: #1a1a2e;
-  --fastmd-border: #333;
-  --fastmd-border-bright: #444;
+  --veloxmd-bg: #1a1a2e;
+  --veloxmd-text: #eaeaea;
+  --veloxmd-text-bright: #ffffff;
+  --veloxmd-text-muted: #888;
+  --veloxmd-syntax: #555;
+  --veloxmd-accent: #e94560;
+  --veloxmd-green: #0f3460;
+  --veloxmd-purple: #a855f7;
+  --veloxmd-red: #ef4444;
+  --veloxmd-orange: #f97316;
+  --veloxmd-surface: #16213e;
+  --veloxmd-surface-2: #1a1a2e;
+  --veloxmd-border: #333;
+  --veloxmd-border-bright: #444;
 }
 ```
 

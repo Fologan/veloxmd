@@ -1,5 +1,5 @@
 // =============================================================================
-// FastMD — Public API
+// VeloxMD — Public API
 // =============================================================================
 
 // Editor classes
@@ -56,6 +56,9 @@ export type { TableCellPos, TableRenderResult } from './table-engine.js'
 // Table toolbar
 export { TableToolbar } from './table-toolbar.js'
 export type { TableAction } from './table-toolbar.js'
+
+// Table edit controller
+export { TableEditController } from './table-edit.js'
 
 // Cursor utilities
 export { getFlatOffset, setFlatOffset } from './cursor.js'

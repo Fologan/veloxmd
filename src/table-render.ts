@@ -1,6 +1,8 @@
 // table-render.ts — Bridge between LiveLine parser and table engine
 
 import type { LiveLine } from './types.js'
+import { parseLiveInlinePlus } from './parse-inline-plus.js'
+import { createSegmentNodePlus } from './render-plus.js'
 import { createTableModel } from './table-engine.js'
 import type { TableModel, TableAlign } from './table-engine.js'
 
@@ -67,6 +69,18 @@ const ALIGN_CLASS: Record<string, string> = {
   justify: 'veloxmd-align-left',
 }
 
+function appendInlineContent(cell: HTMLElement, markdown: string) {
+  const segments = parseLiveInlinePlus(markdown).filter(segment => segment.kind !== 'syntax')
+  if (segments.length === 0) {
+    cell.textContent = markdown
+    return
+  }
+
+  for (const segment of segments) {
+    cell.appendChild(createSegmentNodePlus(segment))
+  }
+}
+
 /** Create a rendered <table> element from TableModel */
 export function renderStaticTable(data: TableModel): HTMLTableElement {
   const table = document.createElement('table')
@@ -77,7 +91,7 @@ export function renderStaticTable(data: TableModel): HTMLTableElement {
   const headerRow = document.createElement('tr')
   for (let c = 0; c < data.headers.length; c++) {
     const th = document.createElement('th')
-    th.textContent = data.headers[c]
+    appendInlineContent(th, data.headers[c] || '')
     const align = data.colAligns[c] || 'left'
     if (ALIGN_CLASS[align]) th.className = ALIGN_CLASS[align]
     headerRow.appendChild(th)
@@ -91,7 +105,7 @@ export function renderStaticTable(data: TableModel): HTMLTableElement {
     const tr = document.createElement('tr')
     for (let c = 0; c < data.headers.length; c++) {
       const td = document.createElement('td')
-      td.textContent = row[c] || ''
+      appendInlineContent(td, row[c] || '')
       const align = data.colAligns[c] || 'left'
       if (ALIGN_CLASS[align]) td.className = ALIGN_CLASS[align]
       tr.appendChild(td)

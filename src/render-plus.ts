@@ -4,6 +4,18 @@
 
 import type { LiveSegment, LiveLine } from './types.js'
 import { createSegmentNode, renderLineElement } from './render.js'
+import { createReferenceNode } from './features/reference-syntax/render.js'
+
+export type CitationRenderMode = 'badge' | 'raw'
+
+export interface RenderPlusOptions {
+  citationMode?: CitationRenderMode
+}
+
+const CITATION_START = '\uE200'
+const CITATION_END = '\uE201'
+const CITATION_SEPARATOR = '\uE202'
+const CITATION_PREFIX = `${CITATION_START}cite${CITATION_SEPARATOR}`
 
 /** Segment kinds that map to a simple <span class="..."> */
 const SPAN_CLASS: Record<string, string> = {
@@ -29,7 +41,49 @@ const ELEMENT_KIND: Record<string, { tag: string; className?: string }> = {
   'subscript': { tag: 'sub' },
 }
 
-export function createSegmentNodePlus(seg: LiveSegment): Node {
+function citationRefs(rawText: string): string[] {
+  if (rawText.startsWith(CITATION_PREFIX) && rawText.endsWith(CITATION_END)) {
+    return rawText
+      .slice(CITATION_PREFIX.length, -CITATION_END.length)
+      .split(CITATION_SEPARATOR)
+      .map(ref => ref.trim())
+      .filter(Boolean)
+  }
+
+  return rawText.split(/\s+/).filter(Boolean)
+}
+
+function createCitationNode(rawText: string, mode: CitationRenderMode = 'badge'): HTMLElement {
+  const refs = citationRefs(rawText)
+  if (mode === 'raw') {
+    const el = document.createElement('span')
+    el.className = 'live-citation-source'
+    el.textContent = rawText
+    if (refs.length > 0) el.title = refs.join(', ')
+    return el
+  }
+
+  const count = refs.length || 1
+  const el = document.createElement('sup')
+  el.className = 'live-citation'
+  el.contentEditable = 'false'
+  el.dataset.raw = rawText
+  el.textContent = count === 1 ? 'cita' : `citas ${count}`
+  el.setAttribute('aria-label', count === 1 ? 'cita' : `${count} citas`)
+  if (refs.length > 0) {
+    el.title = refs.join(', ')
+  }
+  return el
+}
+
+export function createSegmentNodePlus(seg: LiveSegment, options: RenderPlusOptions = {}): Node {
+  const reference = createReferenceNode(seg)
+  if (reference) return reference
+
+  if (seg.kind === 'citation') {
+    return createCitationNode(seg.text, options.citationMode)
+  }
+
   // Simple span cases
   const spanCls = SPAN_CLASS[seg.kind]
   if (spanCls) {
@@ -59,8 +113,8 @@ export function createSegmentNodePlus(seg: LiveSegment): Node {
   return createSegmentNode(seg)
 }
 
-export function renderLineElementPlus(line: LiveLine, index: number): HTMLElement {
-  const div = renderLineElement(line, index, createSegmentNodePlus)
+export function renderLineElementPlus(line: LiveLine, index: number, options: RenderPlusOptions = {}): HTMLElement {
+  const div = renderLineElement(line, index, (seg) => createSegmentNodePlus(seg, options))
 
   // Add plus-specific CSS classes
   switch (line.blockType) {

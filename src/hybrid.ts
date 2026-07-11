@@ -9,18 +9,10 @@
 /** Block classes where syntax should NOT collapse */
 const EXEMPT_CLASSES = ['live-code-fence', 'live-code-line', 'live-hr', 'live-table-separator']
 
-/** Font-size multipliers for syntax spans inside heading blocks */
-const HEADING_SYNTAX_SCALE: Record<string, number> = {
-  'live-h1': 0.55 * 2,    // font-size: 0.55em inside 2em heading
-  'live-h2': 0.55 * 1.5,
-  'live-h3': 0.55 * 1.25,
-}
-
 export class HybridController {
   private ctx: CanvasRenderingContext2D
   private widthCache = new Map<string, number>()
   private baseFont = ''
-  private baseFontSize = 16
 
   constructor() {
     const canvas = document.createElement('canvas')
@@ -70,12 +62,11 @@ export class HybridController {
 
   private annotateLineWidths(lineEl: HTMLElement): void {
     if (EXEMPT_CLASSES.some(c => lineEl.classList.contains(c))) return
-    const font = this.getEffectiveFont(lineEl)
     const spans = lineEl.querySelectorAll('.syntax') as NodeListOf<HTMLElement>
     for (const span of spans) {
       const text = span.textContent || ''
       if (!text) continue
-      span.style.width = this.measureText(text, font) + 'px'
+      span.style.width = this.measureText(text, this.getNodeFont(span)) + 'px'
     }
   }
 
@@ -107,7 +98,7 @@ export class HybridController {
     // Walk child nodes of the line, building a map of visual position → flat offset.
     // Syntax spans are 0-width in collapsed state, so skip their visual width
     // but count their characters for the flat offset.
-    const font = this.getEffectiveFont(lineEl)
+    const font = this.getNodeFont(lineEl)
     let visualX = 0
     let flatOffset = 0
 
@@ -158,35 +149,16 @@ export class HybridController {
   private resolveBaseFont(root: HTMLElement): void {
     if (this.baseFont) return
     const style = getComputedStyle(root)
-    this.baseFontSize = parseFloat(style.fontSize) || 16
-    this.baseFont = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-  }
-
-  private getEffectiveFont(lineEl: HTMLElement): string {
-    // Check if this is a heading with scaled syntax
-    for (const [cls, scale] of Object.entries(HEADING_SYNTAX_SCALE)) {
-      if (lineEl.classList.contains(cls)) {
-        const size = this.baseFontSize * scale
-        return this.baseFont.replace(/[\d.]+px/, size + 'px')
-      }
-    }
-    return this.baseFont
+    this.baseFont = this.fontFromStyle(style)
   }
 
   /** Get the effective font for a child node (bold, italic, etc.) */
-  private getNodeFont(node: Node, lineFont: string): string {
-    if (!(node instanceof HTMLElement)) return lineFont
+  private getNodeFont(node: Node, fallbackFont = this.baseFont): string {
+    if (!(node instanceof HTMLElement)) return fallbackFont
+    return this.fontFromStyle(getComputedStyle(node))
+  }
 
-    let font = lineFont
-    const tag = node.tagName
-
-    if (tag === 'STRONG' || tag === 'B') {
-      font = font.replace(/\b(normal|[1-9]00)\b/, '700')
-    }
-    if (tag === 'EM' || tag === 'I') {
-      font = font.replace(/^normal/, 'italic')
-    }
-
-    return font
+  private fontFromStyle(style: CSSStyleDeclaration): string {
+    return style.font || `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
   }
 }

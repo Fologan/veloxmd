@@ -120,7 +120,7 @@
   min-height: 1.85em;
   padding: 0 2px;
   border-radius: 3px;
-  transition: background-color 0.15s;
+  contain: layout style;
 }
 
 .live-line.focused {
@@ -134,7 +134,6 @@
 .live-line .syntax {
   color: var(--veloxmd-text-muted);
   opacity: 0.7;
-  transition: opacity 0.2s ease, color 0.2s ease;
   font-weight: normal;
   font-style: normal;
   text-decoration: none;
@@ -144,38 +143,33 @@
   opacity: 0.85;
 }
 
-/* ---- Hybrid mode — syntax collapses on unfocused lines ---- */
+/* ---- Hybrid mode — visibility only ---- */
 
 .hybrid-mode .live-line .syntax {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: baseline;
+  display: inline;
   white-space: pre;
 }
 
 .hybrid-mode .live-line:not(.focused) .syntax {
-  width: 0 !important;
-  opacity: 0;
-  transition: width 0.2s ease, opacity 0.15s ease;
-}
-
-.hybrid-mode .live-line.focused .syntax {
-  opacity: 0.6;
-  transition: width 0.2s ease, opacity 0.15s ease;
+  display: none;
 }
 
 /* In hybrid mode, code blocks and HR keep their syntax visible */
 .hybrid-mode .live-code-fence .syntax,
 .hybrid-mode .live-code-line .syntax,
-.hybrid-mode .live-hr .syntax,
+.hybrid-mode .live-hr .syntax {
+  display: inline !important;
+  white-space: pre;
+}
+
+/* Tables are a separate presentation mode in Source, Hybrid, and Static. */
 .hybrid-mode .live-table-separator .syntax {
   display: inline !important;
   width: auto !important;
   opacity: 0.3;
+  white-space: pre;
 }
-.hybrid-mode .live-code-fence.focused .syntax,
-.hybrid-mode .live-code-line.focused .syntax,
-.hybrid-mode .live-hr.focused .syntax,
+
 .hybrid-mode .live-table-separator.focused .syntax {
   opacity: 0.6;
 }
@@ -217,20 +211,24 @@
 
 /* ---- Inline formatting ---- */
 
-.live-line strong {
+.live-line strong,
+.veloxmd-table strong {
   color: var(--veloxmd-text-bright);
   font-weight: 700;
 }
 
-.live-line em {
+.live-line em,
+.veloxmd-table em {
   color: var(--veloxmd-purple);
 }
 
-.live-line strong em {
+.live-line strong em,
+.veloxmd-table strong em {
   color: var(--veloxmd-purple);
 }
 
-.live-line code {
+.live-line code,
+.veloxmd-table code {
   font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
   font-size: 0.88em;
   background: var(--veloxmd-surface-2);
@@ -240,9 +238,40 @@
   border: 1px solid var(--veloxmd-border);
 }
 
-.live-line del {
+.live-line del,
+.veloxmd-table del {
   color: var(--veloxmd-text-muted);
   text-decoration: line-through;
+}
+
+.live-line .live-citation,
+.veloxmd-table .live-citation {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35em;
+  padding: 0 0.38em;
+  border: 1px solid var(--veloxmd-border-bright);
+  border-radius: 999px;
+  background: var(--veloxmd-surface-2);
+  color: var(--veloxmd-text-muted);
+  font-size: 0.68em;
+  font-weight: 650;
+  line-height: 1.35;
+  vertical-align: super;
+  white-space: nowrap;
+}
+
+.live-citation-source {
+  display: inline;
+  padding: 0.08em 0.32em;
+  border: 1px solid var(--veloxmd-border-bright);
+  border-radius: 4px;
+  background: var(--veloxmd-surface-2);
+  color: var(--veloxmd-text-muted);
+  font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  font-size: 0.82em;
+  line-height: 1.45;
+  white-space: break-spaces;
 }
 
 .live-link-text {
@@ -534,7 +563,23 @@
   user-select: none;
   opacity: var(--veloxmd-details-toggle-opacity);
   margin-right: 2px;
-  transition: opacity 0.15s;
+}
+
+.live-reference {
+  color: var(--veloxmd-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--veloxmd-accent) 38%, transparent);
+  text-underline-offset: 2px;
+}
+
+.live-static .live-reference,
+.hybrid-mode .live-line:not(.focused) .live-reference {
+  cursor: pointer;
+}
+
+.live-static .live-reference-target.has-label,
+.hybrid-mode .live-line:not(.focused) .live-reference-target.has-label {
+  display: none;
 }
 
 .live-details-toggle:hover {
@@ -572,6 +617,7 @@
   width: auto;
   margin: 4px 0;
   font-size: 0.92em;
+  contain: layout style;
 }
 
 .veloxmd-table th,
@@ -619,20 +665,6 @@
   border-radius: 6px;
   border: 1px solid var(--veloxmd-border);
   object-fit: contain;
-}
-
-/* ---- Format pop animation ---- */
-
-@keyframes fmtPop {
-  from { opacity: 0.7; }
-  to   { opacity: 1; }
-}
-
-.live-line strong,
-.live-line em,
-.live-line del,
-.live-link-text {
-  animation: fmtPop 0.12s ease-out;
 }
 
 /* ---- Static mode (LiveViewer) — hide all syntax markers ---- */

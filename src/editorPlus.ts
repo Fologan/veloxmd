@@ -35,11 +35,15 @@ export class LiveEditorPlus extends LiveEditor {
   }
 
   protected override createNode(seg: LiveSegment): Node {
-    return createSegmentNodePlus(seg)
+    return createSegmentNodePlus(seg, {
+      citationMode: this.viewMode === 'source' ? 'raw' : 'badge',
+    })
   }
 
   protected override renderLine(line: LiveLine, index: number): HTMLElement {
-    return renderLineElementPlus(line, index)
+    return renderLineElementPlus(line, index, {
+      citationMode: this.viewMode === 'source' ? 'raw' : 'badge',
+    })
   }
 
   protected override onKeyDown(e: KeyboardEvent): void {

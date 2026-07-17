@@ -117,7 +117,15 @@ export class LiveEditor {
     this.renderAll()
     this.root.focus()
     this.pushSnapshot() // initial empty state
-    this.mutationObserver = new MutationObserver(() => this.queueDomMutationSync())
+    this.mutationObserver = new MutationObserver(records => {
+      const onlyNonEditableVisualChanges = records.length > 0 && records.every(record => {
+        const element = record.target instanceof Element
+          ? record.target
+          : record.target.parentElement
+        return Boolean(element?.closest('[contenteditable="false"]'))
+      })
+      if (!onlyNonEditableVisualChanges) this.queueDomMutationSync()
+    })
     this.mutationObserver.observe(this.root, {
       childList: true,
       characterData: true,
@@ -1237,6 +1245,9 @@ export class LiveEditor {
     for (const child of children) {
       if (child.nodeType === Node.TEXT_NODE) {
         out.push(...this.normalizeInputText(child.textContent || '').split('\n'))
+      } else if (child.nodeType === Node.COMMENT_NODE) {
+        const match = /^veloxmd-visual-line:(\d+)$/.exec((child as Comment).data)
+        if (match) out.push(this.lines[Number(match[1])] ?? '')
       } else if (child instanceof HTMLElement) {
         if (child.contentEditable === 'false') continue
         const text = child.tagName === 'BR' ? '' : this.readLineText(child).replace(/\r/g, '')
@@ -1249,6 +1260,11 @@ export class LiveEditor {
 
   /** Read text content of a line element, excluding non-editable decorations */
   private readLineText(el: HTMLElement): string {
+    if (el.classList.contains('veloxmd-visual-source-hidden')) {
+      const line = Number(el.dataset.line)
+      if (Number.isInteger(line) && line >= 0) return this.lines[line] ?? ''
+    }
+
     if (
       el.childNodes.length === 1
       && el.firstChild instanceof HTMLElement

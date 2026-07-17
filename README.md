@@ -1,6 +1,6 @@
 # VeloxMD
 
-Engine de Markdown in-place para web, sin framework de UI. El texto se formatea en el mismo lugar donde se edita y conserva paridad de caracteres entre el Markdown crudo y el DOM. Chart carga uPlot bajo demanda en un chunk separado; Board usa DOM y Pointer Events nativos.
+Engine de Markdown in-place para web, sin framework de UI. El texto se formatea en el mismo lugar donde se edita y conserva paridad de caracteres entre el Markdown crudo y el DOM. Chart usa un renderer Canvas propio y virtualizado; Board usa DOM y Pointer Events nativos.
 
 Este repositorio es el espejo standalone del engine que vive dentro de Zafiro. La versión actual es `0.1.0-alpha.5`.
 

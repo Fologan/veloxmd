@@ -19,3 +19,9 @@ not part of the format.
 Supported chart types are `line`, `area`, `bar`, and `scatter`. A dragged point
 updates Canvas during the gesture and commits one canonical Markdown change when
 the pointer is released.
+
+The renderer is native to VeloxMD and has no chart-library dependency. It keeps
+only Charts near the stable viewport rasterized, uses a reduced internal Canvas
+buffer at the same CSS size, and postpones viewport reconciliation until scrolling
+has stopped. Hidden source lines are detached from layout while the Markdown model
+remains canonical and fully restorable.

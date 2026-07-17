@@ -33,12 +33,14 @@ export class LiveEditorPlus extends LiveEditor {
 
   private setupVisualBlocks(): void {
     if (this.viewMode !== 'hybrid') return
-    this.getVisualBlocks().sync(
-      this.root,
-      this.lines,
-      'hybrid',
-      (start, end, replacement) => this.replaceLineRange(start, end, replacement),
-    )
+    this.runWithMutationSyncSuppressed(() => {
+      this.getVisualBlocks().sync(
+        this.root,
+        this.lines,
+        'hybrid',
+        (start, end, replacement) => this.replaceLineRange(start, end, replacement),
+      )
+    })
   }
 
   private getTableEdit(): TableEditController {

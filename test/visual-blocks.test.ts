@@ -5,6 +5,7 @@ import { LiveViewer } from '../src/viewer.js'
 const editors: Array<{ destroy(): void }> = []
 
 afterEach(() => {
+  vi.restoreAllMocks()
   editors.splice(0).forEach(editor => editor.destroy())
   document.body.innerHTML = ''
 })
@@ -33,8 +34,32 @@ describe('visual block integration', () => {
 
     const root = container.querySelector<HTMLElement>('.live-editor')!
     expect(container.querySelector('.veloxmd-board')).not.toBeNull()
-    expect(root.children).toHaveLength(boardMarkdown().split('\n').length)
+    expect(root.childNodes).toHaveLength(boardMarkdown().split('\n').length)
+    expect(Array.from(root.childNodes).filter(node => node.nodeType === Node.COMMENT_NODE)).toHaveLength(6)
     expect(root.querySelector('[data-line="1"]')?.classList.contains('veloxmd-visual-host')).toBe(true)
+    expect(root.querySelector('[data-line="2"]')).toBeNull()
+  })
+
+  it('preserves detached visual source lines when another line is edited', () => {
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      font: '',
+      measureText: (text: string) => ({ width: text.length * 8 }),
+    } as unknown as CanvasRenderingContext2D)
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const editor = new LiveEditorPlus(container)
+    editors.push(editor)
+    editor.setValue(boardMarkdown())
+    editor.setViewMode('hybrid')
+
+    const heading = container.querySelector<HTMLElement>('[data-line="0"]')!
+    heading.textContent = '# Updated project'
+    heading.dispatchEvent(new Event('input', { bubbles: true }))
+
+    expect(editor.getValue()).toContain('# Updated project')
+    expect(editor.getValue()).toContain('```board\n## To do\n- [ ] First card')
+    expect(container.querySelector('.veloxmd-board')).not.toBeNull()
+    canvas.mockRestore()
   })
 
   it('commits a Board interaction through editor onChange and undo', () => {

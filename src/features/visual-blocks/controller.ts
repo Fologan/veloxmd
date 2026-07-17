@@ -18,7 +18,9 @@ type MountedVisualBlock = {
   host: HTMLElement
   signature: string
   source: VisualBlockSource
+  sourceContents: DocumentFragment[]
   sourceElements: HTMLElement[]
+  sourcePlaceholders: Array<Comment | null>
   wrapper: HTMLElement
 }
 
@@ -142,6 +144,18 @@ export class VisualBlockController {
     host.style.setProperty('--veloxmd-visual-min-height', `${feature.minHeight}px`)
     for (const element of sourceElements) element.classList.add('veloxmd-visual-source-hidden')
 
+    const sourceContents = sourceElements.map(element => {
+      const content = document.createDocumentFragment()
+      while (element.firstChild) content.appendChild(element.firstChild)
+      return content
+    })
+    const sourcePlaceholders = sourceElements.map((element, index) => {
+      if (index === 0) return null
+      const placeholder = document.createComment(`veloxmd-visual-line:${source.startLine + index}`)
+      element.replaceWith(placeholder)
+      return placeholder
+    })
+
     const wrapper = document.createElement('section')
     wrapper.className = `veloxmd-visual-block veloxmd-${feature.id}-block`
     wrapper.contentEditable = 'false'
@@ -174,7 +188,9 @@ export class VisualBlockController {
       host,
       signature: blockSignature(source),
       source,
+      sourceContents,
       sourceElements,
+      sourcePlaceholders,
       wrapper,
     }
 
@@ -240,6 +256,12 @@ export class VisualBlockController {
     entry.wrapper.remove()
     entry.host.classList.remove('veloxmd-visual-host')
     entry.host.style.removeProperty('--veloxmd-visual-min-height')
-    for (const element of entry.sourceElements) element.classList.remove('veloxmd-visual-source-hidden')
+    entry.sourceElements.forEach((element, index) => {
+      const placeholder = entry.sourcePlaceholders[index]
+      if (placeholder?.parentNode) placeholder.replaceWith(element)
+      element.classList.remove('veloxmd-visual-source-hidden')
+      const content = entry.sourceContents[index]
+      if (content) element.appendChild(content)
+    })
   }
 }

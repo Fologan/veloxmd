@@ -3,106 +3,32 @@
 }
 
 .veloxmd-chart-canvas {
+  position: relative;
   width: 100%;
   min-width: 0;
-  padding: 16px 8px 4px;
+  overflow: hidden;
+  contain: strict;
 }
 
-.veloxmd-chart-canvas .uplot,
-.veloxmd-chart-canvas .uplot *,
-.veloxmd-chart-canvas .uplot *::before,
-.veloxmd-chart-canvas .uplot *::after {
-  box-sizing: border-box;
+.veloxmd-chart-canvas[data-chart-state='deferred']::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--veloxmd-text-muted);
+  content: 'Chart';
+  font-size: 11px;
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
 }
 
-.veloxmd-chart-canvas .uplot {
-  width: min-content;
-  color: var(--veloxmd-text);
-  font-family: var(--veloxmd-font-family);
-  line-height: 1.5;
-}
-
-.veloxmd-chart-canvas .u-title {
-  color: var(--veloxmd-text);
-  font-size: 15px;
-  font-weight: 650;
-  text-align: center;
-}
-
-.veloxmd-chart-canvas .u-wrap {
-  position: relative;
+.veloxmd-chart-surface {
+  display: block;
+  max-width: 100%;
+  cursor: crosshair;
+  touch-action: none;
   user-select: none;
 }
 
-.veloxmd-chart-canvas .u-over,
-.veloxmd-chart-canvas .u-under,
-.veloxmd-chart-canvas .u-axis {
-  position: absolute;
-}
-
-.veloxmd-chart-canvas .u-under {
-  overflow: hidden;
-}
-
-.veloxmd-chart-canvas canvas {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.veloxmd-chart-canvas .u-legend {
-  margin: auto;
-  color: var(--veloxmd-text-muted);
-  font-size: 12px;
-  text-align: center;
-}
-
-.veloxmd-chart-canvas .u-inline,
-.veloxmd-chart-canvas .u-inline * {
-  display: inline-block;
-}
-
-.veloxmd-chart-canvas .u-inline tr {
-  margin-right: 12px;
-}
-
-.veloxmd-chart-canvas .u-series > * {
-  padding: 3px;
-}
-
-.veloxmd-chart-canvas .u-marker {
-  width: 0.85em;
-  height: 0.85em;
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-.veloxmd-chart-canvas .u-select {
-  position: absolute;
-  background: color-mix(in srgb, var(--veloxmd-accent) 18%, transparent);
-  pointer-events: none;
-}
-
-.veloxmd-chart-canvas .u-cursor-x,
-.veloxmd-chart-canvas .u-cursor-y,
-.veloxmd-chart-canvas .u-cursor-pt {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  will-change: transform;
-}
-
-.veloxmd-chart-canvas .u-cursor-pt {
-  border-radius: 50%;
-}
-
-.veloxmd-chart-canvas .u-off {
-  display: none;
-}
-
-.veloxmd-chart-canvas .is-editing-point,
-.veloxmd-chart-canvas .is-editing-point .u-over {
-  cursor: ns-resize !important;
+.veloxmd-chart-surface.is-editing-point {
+  cursor: ns-resize;
 }

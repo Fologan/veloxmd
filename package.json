@@ -42,9 +42,6 @@
     "live-preview",
     "lightweight"
   ],
-  "dependencies": {
-    "uplot": "^1.6.32"
-  },
   "author": "Fologan",
   "license": "MIT",
   "repository": {

@@ -1,6 +1,6 @@
 # VeloxMD
 
-Engine de Markdown in-place para web, sin dependencias de runtime. El texto se formatea en el mismo lugar donde se edita y conserva paridad de caracteres entre el Markdown crudo y el DOM.
+Engine de Markdown in-place para web, sin framework de UI. El texto se formatea en el mismo lugar donde se edita y conserva paridad de caracteres entre el Markdown crudo y el DOM. Chart carga uPlot bajo demanda en un chunk separado; Board usa DOM y Pointer Events nativos.
 
 Este repositorio es el espejo standalone del engine que vive dentro de Zafiro. La versión actual es `0.1.0-alpha.5`.
 
@@ -18,7 +18,7 @@ La dirección de sincronización es siempre:
 Zafiro (canónico) -> C:\CODE\veloxmd (espejo standalone)
 ```
 
-Los cambios de runtime no deben desarrollarse primero en este espejo para copiarlos después a Zafiro. El payload compartido incluye `src/`, `test/`, las configuraciones de TypeScript, tsup y Vitest, `LICENSE`, `AGENTS.md` y `UBIQUITOUS_LANGUAGE.md`.
+Los cambios de runtime no deben desarrollarse primero en este espejo para copiarlos después a Zafiro. El payload compartido incluye `src/`, `test/`, `build-styles.mjs`, las configuraciones de TypeScript, tsup y Vitest, `LICENSE`, `AGENTS.md` y `UBIQUITOUS_LANGUAGE.md`.
 
 El shell propio de este repositorio se conserva aparte: `.git`, `.github`, `.gitignore`, `index.html`, `spec/`, `TODO.md`, `package-lock.json` y los archivos locales ignorados. El nombre de paquete standalone continúa siendo `veloxmd`; dentro del monorepo canónico se llama `@fologan/veloxmd`.
 
@@ -33,6 +33,7 @@ VeloxMD contiene exclusivamente capacidades del engine Markdown:
 - Modos `source` y `hybrid`.
 - Toolbar y edición de tablas.
 - Reconocimiento de sintaxis de referencias.
+- Bloques visuales inline: Board respaldado por tareas Markdown y Chart respaldado por JSON data-only.
 
 VeloxMD no contiene ni debe contener:
 

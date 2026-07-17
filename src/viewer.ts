@@ -6,22 +6,49 @@ import type { LiveLine } from './types.js'
 import { parseLiveDocumentPlus } from './parse-block-plus.js'
 import { renderLineElementPlus } from './render-plus.js'
 import { extractTableData, renderStaticTable } from './table-render.js'
+import { VisualBlockController } from './features/visual-blocks/index.js'
 
 const TABLE_BLOCK_TYPES = new Set(['table-header', 'table-separator', 'table-row'])
+
+export type ViewerOptions = {
+  parser?: (lines: string[]) => LiveLine[]
+  onChange?: (text: string) => void
+}
 
 export class LiveViewer {
   private root: HTMLDivElement
   private parseDoc: (lines: string[]) => LiveLine[]
+  private lines: string[] = ['']
+  private changeCallback: ((text: string) => void) | null = null
+  private visualBlocks = new VisualBlockController()
 
-  constructor(container: HTMLElement, parser?: (lines: string[]) => LiveLine[]) {
+  constructor(
+    container: HTMLElement,
+    parserOrOptions?: ((lines: string[]) => LiveLine[]) | ViewerOptions,
+  ) {
     this.root = document.createElement('div')
     this.root.className = 'live-editor live-static'
     container.appendChild(this.root)
-    this.parseDoc = parser ?? parseLiveDocumentPlus
+    if (typeof parserOrOptions === 'function') {
+      this.parseDoc = parserOrOptions
+    } else {
+      this.parseDoc = parserOrOptions?.parser ?? parseLiveDocumentPlus
+      this.changeCallback = parserOrOptions?.onChange ?? null
+    }
   }
 
   setValue(text: string): void {
-    const parsed = this.parseDoc(text.split('\n'))
+    this.lines = text.replace(/\r\n?/g, '\n').split('\n')
+    this.render()
+  }
+
+  getValue(): string {
+    return this.lines.join('\n')
+  }
+
+  private render(): void {
+    this.visualBlocks.destroy()
+    const parsed = this.parseDoc(this.lines)
     const frag = document.createDocumentFragment()
 
     let detailsEl: HTMLDetailsElement | null = null
@@ -91,9 +118,24 @@ export class LiveViewer {
 
     this.root.innerHTML = ''
     this.root.appendChild(frag)
+    this.visualBlocks.sync(
+      this.root,
+      this.lines,
+      'static',
+      (start, end, replacement) => {
+        this.lines = [
+          ...this.lines.slice(0, start),
+          ...replacement,
+          ...this.lines.slice(end),
+        ]
+        this.render()
+        this.changeCallback?.(this.getValue())
+      },
+    )
   }
 
   destroy(): void {
+    this.visualBlocks.destroy()
     this.root.remove()
   }
 }

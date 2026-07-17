@@ -1,0 +1,109 @@
+.veloxmd-board {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 260px;
+  padding: 42px 14px 16px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.veloxmd-board-column {
+  flex: 0 0 250px;
+  min-width: 0;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--veloxmd-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--veloxmd-bg) 94%, var(--veloxmd-text) 6%);
+  contain: layout style paint;
+}
+
+.veloxmd-board-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--veloxmd-border);
+}
+
+.veloxmd-board-column-header h3 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--veloxmd-text);
+  font-size: 13px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.veloxmd-board-count {
+  min-width: 22px;
+  color: var(--veloxmd-text-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.veloxmd-board-card-list {
+  min-height: 54px;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.veloxmd-board-card {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+  min-height: 42px;
+  margin: 0 0 8px;
+  padding: 9px;
+  border: 1px solid var(--veloxmd-border);
+  border-radius: 7px;
+  background: var(--veloxmd-bg);
+  color: var(--veloxmd-text);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  overflow-wrap: anywhere;
+}
+
+.veloxmd-board-card:last-child {
+  margin-bottom: 0;
+}
+
+.veloxmd-board-card.is-dragging {
+  opacity: 0.55;
+  cursor: grabbing;
+  pointer-events: none;
+}
+
+.veloxmd-board-card.is-checked .veloxmd-board-card-text {
+  color: var(--veloxmd-text-muted);
+  text-decoration: line-through;
+}
+
+.veloxmd-board-check {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--veloxmd-border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--veloxmd-accent);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  cursor: pointer;
+}
+
+.veloxmd-board-card-text {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: normal;
+}

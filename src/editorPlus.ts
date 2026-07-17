@@ -9,6 +9,7 @@ import { createSegmentNodePlus, renderLineElementPlus } from './render-plus.js'
 import { extractTableData, renderStaticTable } from './table-render.js'
 import type { TableModel } from './table-engine.js'
 import { TableEditController } from './table-edit.js'
+import { VisualBlockController } from './features/visual-blocks/index.js'
 
 const TABLE_LINE_CLASSES = new Set(['live-table-header', 'live-table-row', 'live-table-separator'])
 
@@ -17,6 +18,28 @@ export class LiveEditorPlus extends LiveEditor {
   // Track which details blocks are expanded (by summary line data-line)
   private expandedDetails = new Set<string>()
   private tableEdit: TableEditController | null = null
+  private visualBlocks: VisualBlockController | null = null
+
+  override destroy(): void {
+    this.visualBlocks?.destroy()
+    this.tableEdit?.destroy()
+    super.destroy()
+  }
+
+  private getVisualBlocks(): VisualBlockController {
+    if (!this.visualBlocks) this.visualBlocks = new VisualBlockController()
+    return this.visualBlocks
+  }
+
+  private setupVisualBlocks(): void {
+    if (this.viewMode !== 'hybrid') return
+    this.getVisualBlocks().sync(
+      this.root,
+      this.lines,
+      'hybrid',
+      (start, end, replacement) => this.replaceLineRange(start, end, replacement),
+    )
+  }
 
   private getTableEdit(): TableEditController {
     if (!this.tableEdit) {
@@ -98,17 +121,25 @@ export class LiveEditorPlus extends LiveEditor {
   }
 
   protected override renderAll(): void {
+    this.visualBlocks?.destroy()
     super.renderAll()
     this.setupDetailsBlocks()
-    if (this.viewMode === 'hybrid') this.setupTableBlocks()
+    if (this.viewMode === 'hybrid') {
+      this.setupTableBlocks()
+      this.setupVisualBlocks()
+    }
   }
 
   protected override onIncrementalRender(startIdx: number, endIdx: number): void {
     this.setupDetailsBlocksInRange(startIdx, endIdx)
-    if (this.viewMode === 'hybrid') this.setupTableBlocksInRange(startIdx, endIdx)
+    if (this.viewMode === 'hybrid') {
+      this.setupTableBlocksInRange(startIdx, endIdx)
+      this.setupVisualBlocks()
+    }
   }
 
   protected override onBlockFocusChange(oldRange: [number, number] | null, newRange: [number, number] | null): void {
+    this.setupVisualBlocks()
     // Table edit controller — activate/deactivate on any mode
     if (newRange) {
       const newFirstEl = this.root.querySelector(`[data-line="${newRange[0]}"]`) as HTMLElement | null

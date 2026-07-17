@@ -2,7 +2,7 @@
 
 Esta carpeta es el punto de crecimiento para extensiones de Markdown de VeloxMD.
 
-Una feature es una sintaxis o visualizacion especializada que afecta el parseo o render del documento: Mermaid, Kanban, admonitions, diagramas, math avanzado, timelines, etc.
+Una feature es una sintaxis o visualizacion especializada que afecta el parseo o render del documento: Board, Chart, Mermaid, admonitions, diagramas, math avanzado, timelines, etc.
 
 ## Regla
 
@@ -34,9 +34,11 @@ No crear imports directos desde la app hacia estas carpetas. La app sigue consum
 - Definir comportamiento para `static`, `source` y `hybrid`.
 - Prefijar clases CSS con `veloxmd-<feature-id>-`.
 
-## Features previstas
+## Runtime activo
 
-- `mermaid/`: diagramas declarados con code fences u otra sintaxis compatible.
-- `kanban/`: tableros derivados de Markdown estructurado.
+- `visual-blocks/`: lifecycle y transaccion comun para bloques fenced visuales.
+- `board/`: columnas y tarjetas derivadas de tareas Markdown; drag nativo con Pointer Events.
+- `chart/`: lineas, areas, barras y dispersion en Canvas; puntos editables y spec JSON estricto.
+- `reference-syntax/`: metadatos puros de referencias Markdown/Obsidian.
 
-Estas carpetas son scaffolds de organizacion. No tienen runtime activo todavia.
+`mermaid/` permanece como scaffold sin runtime. Board es el nombre propio de la feature; no existe un modulo `kanban/` paralelo.

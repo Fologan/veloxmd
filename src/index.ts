@@ -12,6 +12,7 @@ export { Toolbar } from './toolbar.js'
 
 // Viewer (static read-only)
 export { LiveViewer } from './viewer.js'
+export type { ViewerOptions } from './viewer.js'
 
 // Hybrid mode
 export { HybridController } from './hybrid.js'
@@ -62,3 +63,9 @@ export { TableEditController } from './table-edit.js'
 
 // Cursor utilities
 export { getFlatOffset, setFlatOffset } from './cursor.js'
+
+// Interactive visual block features
+export { parseBoard, serializeBoard, moveBoardCard } from './features/board/index.js'
+export type { BoardCard, BoardColumn, BoardModel, BoardParseResult } from './features/board/index.js'
+export { parseChart, serializeChart, updateChartValue } from './features/chart/index.js'
+export type { ChartKind, ChartParseResult, ChartSeries, ChartSpec } from './features/chart/index.js'

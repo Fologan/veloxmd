@@ -1,3 +1,7 @@
+@import './features/visual-blocks/styles.css';
+@import './features/board/styles.css';
+@import './features/chart/styles.css';
+
 /* =========================================================================
    VeloxMD — In-place Markdown Editor Styles
    The text formats itself. No split view. Just write.

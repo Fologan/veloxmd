@@ -168,6 +168,25 @@ export class LiveEditor {
     this.changeCallback = callback
   }
 
+  /** Apply one source-level transaction from an interactive feature. */
+  protected replaceLineRange(start: number, end: number, replacement: string[]): void {
+    const safeStart = Math.max(0, Math.min(start, this.lines.length))
+    const safeEnd = Math.max(safeStart, Math.min(end, this.lines.length))
+    const nextLines = [
+      ...this.lines.slice(0, safeStart),
+      ...replacement,
+      ...this.lines.slice(safeEnd),
+    ]
+    if (nextLines.join('\n') === this.getValue()) return
+
+    this.pushSnapshot()
+    this.lines = nextLines.length > 0 ? nextLines : ['']
+    this.pendingSnapshot = null
+    this.redoStack.length = 0
+    this.renderAll()
+    this.emitChange()
+  }
+
   insert(text: string): void {
     this.replaceCurrentSelection(text)
   }

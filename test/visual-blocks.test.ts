@@ -23,6 +23,22 @@ function boardMarkdown() {
   ].join('\n')
 }
 
+function chartMarkdown() {
+  return [
+    '# Metrics',
+    '```chart',
+    '{',
+    '  "version": 1,',
+    '  "type": "line",',
+    '  "title": "Readable data",',
+    '  "labels": ["Jan", "Feb", "Mar"],',
+    '  "series": [{ "name": "Sales", "values": [12, 19, 14], "color": "#5b8def" }],',
+    '  "height": 280',
+    '}',
+    '```',
+  ].join('\n')
+}
+
 describe('visual block integration', () => {
   it('renders Board inline in hybrid without changing direct line parity', () => {
     const container = document.createElement('div')
@@ -101,5 +117,34 @@ describe('visual block integration', () => {
 
     expect(container.querySelector('.veloxmd-board')).toBeNull()
     expect(editor.getValue()).toBe(boardMarkdown())
+  })
+
+  it('renders a full-resolution static SVG and edits its real Markdown source', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const editor = new LiveEditorPlus(container)
+    editors.push(editor)
+    editor.setValue(chartMarkdown())
+    editor.setViewMode('hybrid')
+
+    const svg = container.querySelector<SVGSVGElement>('.veloxmd-chart-svg')
+    expect(svg?.dataset.chartStatic).toBe('true')
+    expect(svg?.getAttribute('viewBox')).toBe('0 0 960 280')
+    expect(svg?.querySelector('.veloxmd-chart-title')?.textContent).toBe('Readable data')
+    expect(container.querySelector('canvas')).toBeNull()
+
+    const edit = container.querySelector<HTMLButtonElement>('.veloxmd-visual-source-button')
+    expect(edit?.textContent).toBe('Editar')
+    edit?.click()
+    expect(container.querySelector('.veloxmd-chart-svg')).toBeNull()
+
+    const titleLine = container.querySelector<HTMLElement>('[data-line="5"]')!
+    titleLine.textContent = '  "title": "Edited chart",'
+    titleLine.dispatchEvent(new Event('input', { bubbles: true }))
+    expect(editor.getValue()).toContain('"title": "Edited chart"')
+
+    editor.setViewMode('source')
+    editor.setViewMode('hybrid')
+    expect(container.querySelector('.veloxmd-chart-title')?.textContent).toBe('Edited chart')
   })
 })

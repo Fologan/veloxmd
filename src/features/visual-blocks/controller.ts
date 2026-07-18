@@ -170,7 +170,8 @@ export class VisualBlockController {
       const editSource = document.createElement('button')
       editSource.type = 'button'
       editSource.className = 'veloxmd-visual-source-button'
-      editSource.textContent = 'Markdown'
+      editSource.textContent = 'Editar'
+      editSource.setAttribute('aria-label', `Editar ${feature.id} en Markdown`)
       editSource.addEventListener('click', () => this.revealSource(root, source.startLine))
       controls.appendChild(editSource)
       wrapper.appendChild(controls)

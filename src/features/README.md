@@ -38,7 +38,7 @@ No crear imports directos desde la app hacia estas carpetas. La app sigue consum
 
 - `visual-blocks/`: lifecycle y transaccion comun para bloques fenced visuales.
 - `board/`: columnas y tarjetas derivadas de tareas Markdown; drag nativo con Pointer Events.
-- `chart/`: lineas, areas, barras y dispersion en Canvas; puntos editables y spec JSON estricto.
+- `chart/`: lineas, areas, barras y dispersion como SVG estatico; edicion del spec JSON estricto mediante `Editar`.
 - `reference-syntax/`: metadatos puros de referencias Markdown/Obsidian.
 
 `mermaid/` permanece como scaffold sin runtime. Board es el nombre propio de la feature; no existe un modulo `kanban/` paralelo.

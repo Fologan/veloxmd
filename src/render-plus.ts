@@ -5,6 +5,7 @@
 import type { LiveSegment, LiveLine } from './types.js'
 import { createSegmentNode, renderLineElement } from './render.js'
 import { createReferenceNode } from './features/reference-syntax/render.js'
+import { tableLineClass } from './features/tables/line.js'
 
 export type CitationRenderMode = 'badge' | 'raw'
 
@@ -117,16 +118,9 @@ export function renderLineElementPlus(line: LiveLine, index: number, options: Re
   const div = renderLineElement(line, index, (seg) => createSegmentNodePlus(seg, options))
 
   // Add plus-specific CSS classes
+  const tableClass = tableLineClass(line.blockType)
+  if (tableClass) div.classList.add(tableClass)
   switch (line.blockType) {
-    case 'table-header':
-      div.classList.add('live-table-header')
-      break
-    case 'table-separator':
-      div.classList.add('live-table-separator')
-      break
-    case 'table-row':
-      div.classList.add('live-table-row')
-      break
     case 'task-list':
       div.classList.add('live-task')
       break

@@ -42,24 +42,28 @@ export { createSegmentNode, renderLineElement } from './render.js'
 export { createSegmentNodePlus, renderLineElementPlus } from './render-plus.js'
 
 // Table engine
-export { extractTableData, renderStaticTable } from './table-render.js'
-export type { TableModel, TableAlign } from './table-render.js'
+export { extractTableData, renderStaticTable } from './features/tables/index.js'
+export type { TableModel, TableAlign } from './features/tables/index.js'
 
 // Table engine (advanced)
 export {
   createTableModel, renderTableText,
-  graphemeLen, displayWidth,
+  graphemeLen, graphemes, graphemeIdxToOffset, offsetToGraphemeIdx, displayWidth,
   cursorToTableCell, tableCellToCursor, nearestTableCell,
   TABLE_BORDERS,
-} from './table-engine.js'
-export type { TableCellPos, TableRenderResult } from './table-engine.js'
+  renderPortableTable, wrapPortableTableCodeBlock,
+  portableCellWidth, normalizeTableCell,
+  portableTableText, portableTableCode, portableTableTextForSelection,
+  UnicodeWidthMeasurer, TABLE_TAB_SIZE,
+} from './features/tables/index.js'
+export type { TableCellPos, TableRenderResult, PortableTableRenderResult, TableBorderKey } from './features/tables/index.js'
 
 // Table toolbar
-export { TableToolbar } from './table-toolbar.js'
-export type { TableAction } from './table-toolbar.js'
+export { TableToolbar } from './features/tables/index.js'
+export type { TableAction } from './features/tables/index.js'
 
 // Table edit controller
-export { TableEditController } from './table-edit.js'
+export { TableEditController } from './features/tables/index.js'
 
 // Cursor utilities
 export { getFlatOffset, setFlatOffset } from './cursor.js'

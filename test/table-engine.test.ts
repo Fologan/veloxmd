@@ -13,22 +13,21 @@ import {
   nearestTableCell,
   TABLE_BORDERS,
   type TableModel,
-} from '../src/table-engine'
+} from '../src/features/tables'
 
 // ── Canvas mock ──────────────────────────────────────────────────────────────
 // Must run before any code that calls graphemeWidth(), which lazily calls
 // initTableCanvas("14px monospace") on first use.
 beforeAll(() => {
-  if (typeof OffscreenCanvas === 'undefined') {
-    // happy-dom may not ship OffscreenCanvas — provide a minimal stub so that
-    // initTableCanvas() doesn't throw and measureText returns predictable values.
-    ;(globalThis as any).OffscreenCanvas = class {
-      getContext() {
-        return {
-          font: '',
-          // Each character is exactly 8.4 px wide so Math.round(w / 8.4) === 1
-          measureText: (s: string) => ({ width: s.length * 8.4 }),
-        }
+  // happy-dom versions differ: some omit OffscreenCanvas and others expose a
+  // shell whose getContext() returns null. Always install the deterministic
+  // contract mock before table measurement.
+  ;(globalThis as any).OffscreenCanvas = class {
+    getContext() {
+      return {
+        font: '',
+        // Each character is exactly 8.4 px wide so width / reference === 1.
+        measureText: (s: string) => ({ width: s.length * 8.4 }),
       }
     }
   }

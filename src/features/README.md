@@ -36,6 +36,7 @@ No crear imports directos desde la app hacia estas carpetas. La app sigue consum
 
 ## Runtime activo
 
+- `tables/`: tablas Markdown, edición medida por fuente y exportación portable Unicode sin tabs.
 - `visual-blocks/`: lifecycle y transaccion comun para bloques fenced visuales.
 - `board/`: columnas y tarjetas derivadas de tareas Markdown; drag nativo con Pointer Events.
 - `chart/`: lineas, areas, barras y dispersion como SVG estatico; edicion del spec JSON estricto mediante `Editar`.

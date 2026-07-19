@@ -11,6 +11,7 @@ import { parseLiveDocument } from './parse-block.js'
 import { createSegmentNode, renderLineElement } from './render.js'
 import { getFlatOffset, setFlatOffset } from './cursor.js'
 import { Toolbar } from './toolbar.js'
+import { findTableBlockRange, isTableBlockType } from './features/tables/line.js'
 
 interface TextPosition {
   line: number
@@ -960,10 +961,14 @@ export class LiveEditor {
     this.replaceCurrentSelection(pastedText)
   }
 
-  private onCopy(e: ClipboardEvent): void {
+  protected transformCopiedText(text: string): string {
+    return text
+  }
+
+  protected onCopy(e: ClipboardEvent): void {
     const text = this.selectedText()
     if (text === null) return
-    e.clipboardData?.setData('text/plain', text)
+    e.clipboardData?.setData('text/plain', this.transformCopiedText(text))
     e.preventDefault()
   }
 
@@ -1525,13 +1530,11 @@ export class LiveEditor {
   }
 
   private static isMultiLineBlockType(bt: string): boolean {
+    if (isTableBlockType(bt)) return true
     switch (bt) {
       case 'code-block-open':
       case 'code-block-line':
       case 'code-block-close':
-      case 'table-header':
-      case 'table-separator':
-      case 'table-row':
       case 'details-open':
       case 'details-summary':
       case 'details-close':
@@ -1539,10 +1542,6 @@ export class LiveEditor {
       default:
         return false
     }
-  }
-
-  private static isTableType(bt: string): boolean {
-    return bt === 'table-header' || bt === 'table-separator' || bt === 'table-row'
   }
 
   private findBlockRange(parsed: LiveLine[], lineIdx: number): [number, number] {
@@ -1560,13 +1559,8 @@ export class LiveEditor {
       return [start, end + 1]
     }
 
-    if (bt === 'table-header' || bt === 'table-separator' || bt === 'table-row') {
-      let start = lineIdx
-      while (start > 0 && LiveEditor.isTableType(parsed[start - 1].blockType)) start--
-      let end = lineIdx
-      while (end < parsed.length - 1 && LiveEditor.isTableType(parsed[end + 1].blockType)) end++
-      return [start, end + 1]
-    }
+    const tableRange = findTableBlockRange(parsed, lineIdx)
+    if (tableRange) return tableRange
 
     if (bt === 'details-open' || bt === 'details-summary' || bt === 'details-close') {
       let start = lineIdx

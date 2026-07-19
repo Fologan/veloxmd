@@ -87,7 +87,7 @@ export interface LiveLine {
   blockLevel?: number
   segments: LiveSegment[]
   lang?: string
-  tableAlignments?: ('left' | 'center' | 'right' | 'default')[]
+  tableAlignments?: ('left' | 'center' | 'right' | 'justify' | 'default')[]
 }
 
 /** Editor view modes */
@@ -98,5 +98,5 @@ export interface ParseState {
   inCodeBlock: boolean
   inTable: boolean
   inMathBlock: boolean
-  tableAlignments: ('left' | 'center' | 'right' | 'default')[]
+  tableAlignments: ('left' | 'center' | 'right' | 'justify' | 'default')[]
 }

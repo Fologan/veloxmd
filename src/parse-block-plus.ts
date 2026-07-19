@@ -5,6 +5,7 @@
 
 import type { LiveLine, LiveSegment, ParseState } from './types.js'
 import { parseLiveInlinePlus } from './parse-inline-plus.js'
+import { parseTableDocumentLine } from './features/tables/index.js'
 
 function createState(): ParseState {
   return {
@@ -13,36 +14,6 @@ function createState(): ParseState {
     inMathBlock: false,
     tableAlignments: [],
   }
-}
-
-function parseTableCells(raw: string): LiveSegment[] {
-  const segments: LiveSegment[] = []
-  const cells = raw.split('|')
-
-  for (let c = 0; c < cells.length; c++) {
-    if (c > 0) segments.push({ text: '|', kind: 'syntax' })
-    const cell = cells[c]
-    if (cell.length > 0) {
-      segments.push(...parseLiveInlinePlus(cell))
-    }
-  }
-  return segments
-}
-
-function isTableSeparator(line: string): boolean {
-  return /^\|?[\s:]*-{3,}[\s:]*(\|[\s:]*-{3,}[\s:]*)*\|?\s*$/.test(line.trim())
-}
-
-function parseAlignments(line: string): ('left' | 'center' | 'right' | 'default')[] {
-  return line.split('|').filter(c => c.trim()).map(cell => {
-    const t = cell.trim()
-    const left = t.startsWith(':')
-    const right = t.endsWith(':')
-    if (left && right) return 'center'
-    if (right) return 'right'
-    if (left) return 'left'
-    return 'default'
-  })
 }
 
 export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
@@ -133,25 +104,11 @@ export function parseLiveDocumentPlus(rawLines: string[]): LiveLine[] {
       continue
     }
 
-    // --- Table handling ---
-    if (state.inTable) {
-      if (trimmed.includes('|')) {
-        if (isTableSeparator(raw)) {
-          result.push({ raw, blockType: 'table-separator', segments: [{ text: raw, kind: 'syntax' }], tableAlignments: parseAlignments(raw) })
-        } else {
-          result.push({ raw, blockType: 'table-row', segments: parseTableCells(raw) })
-        }
-        continue
-      } else {
-        state.inTable = false
-        // Fall through to normal parsing
-      }
-    }
-
-    // Detect table start: a pipe-containing line followed by a separator line
-    if (!state.inTable && trimmed.includes('|') && li + 1 < rawLines.length && isTableSeparator(rawLines[li + 1])) {
-      state.inTable = true
-      result.push({ raw, blockType: 'table-header', segments: parseTableCells(raw) })
+    // Table syntax is owned by features/tables; this parser only preserves block order.
+    const parsedTable = parseTableDocumentLine(raw, rawLines[li + 1], state.inTable)
+    state.inTable = parsedTable.inTable
+    if (parsedTable.line) {
+      result.push(parsedTable.line)
       continue
     }
 

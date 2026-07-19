@@ -5,10 +5,8 @@
 import type { LiveLine } from './types.js'
 import { parseLiveDocumentPlus } from './parse-block-plus.js'
 import { renderLineElementPlus } from './render-plus.js'
-import { extractTableData, renderStaticTable } from './table-render.js'
+import { renderStaticTableBlockAt } from './features/tables/index.js'
 import { VisualBlockController } from './features/visual-blocks/index.js'
-
-const TABLE_BLOCK_TYPES = new Set(['table-header', 'table-separator', 'table-row'])
 
 export type ViewerOptions = {
   parser?: (lines: string[]) => LiveLine[]
@@ -53,32 +51,17 @@ export class LiveViewer {
 
     let detailsEl: HTMLDetailsElement | null = null
     let summaryEl: HTMLElement | null = null
-    let tableLines: LiveLine[] = []
-
-    const flushTable = () => {
-      if (tableLines.length === 0) return
-      const data = extractTableData(tableLines)
-      if (data.headers.length > 0) {
-        const table = renderStaticTable(data)
-        if (detailsEl && summaryEl) {
-          detailsEl.appendChild(table)
-        } else {
-          frag.appendChild(table)
-        }
-      }
-      tableLines = []
-    }
 
     for (let i = 0; i < parsed.length; i++) {
       const line = parsed[i]
 
-      // --- Table accumulation ---
-      if (TABLE_BLOCK_TYPES.has(line.blockType)) {
-        tableLines.push(line)
+      const tableBlock = renderStaticTableBlockAt(parsed, i)
+      if (tableBlock) {
+        if (detailsEl && summaryEl) detailsEl.appendChild(tableBlock.element)
+        else frag.appendChild(tableBlock.element)
+        i = tableBlock.end - 1
         continue
       }
-      // Flush accumulated table lines when we hit a non-table line
-      flushTable()
 
       // --- Details blocks ---
       if (line.blockType === 'details-open') {
@@ -112,8 +95,7 @@ export class LiveViewer {
       }
     }
 
-    // Flush any trailing table/details
-    flushTable()
+    // Flush any trailing details
     if (detailsEl) frag.appendChild(detailsEl)
 
     this.root.innerHTML = ''

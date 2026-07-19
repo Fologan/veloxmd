@@ -6,8 +6,10 @@
 // correct cursor placement on collapsed lines.
 // =============================================================================
 
+import { TABLE_SEPARATOR_LINE_CLASS } from './features/tables/line.js'
+
 /** Block classes where syntax should NOT collapse */
-const EXEMPT_CLASSES = ['live-code-fence', 'live-code-line', 'live-hr', 'live-table-separator']
+const EXEMPT_CLASSES = ['live-code-fence', 'live-code-line', 'live-hr', TABLE_SEPARATOR_LINE_CLASS]
 
 export class HybridController {
   private ctx: CanvasRenderingContext2D

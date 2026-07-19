@@ -6,12 +6,15 @@ import { LiveEditor } from './editor.js'
 import type { LiveLine, LiveSegment } from './types.js'
 import { parseLiveDocumentPlus } from './parse-block-plus.js'
 import { createSegmentNodePlus, renderLineElementPlus } from './render-plus.js'
-import { extractTableData, renderStaticTable } from './table-render.js'
-import type { TableModel } from './table-engine.js'
-import { TableEditController } from './table-edit.js'
+import {
+  extractTableData,
+  isTableHeaderBlock,
+  portableTableTextForSelection,
+  setupHybridTableOverlays,
+  TableEditController,
+  type TableAction,
+} from './features/tables/index.js'
 import { VisualBlockController } from './features/visual-blocks/index.js'
-
-const TABLE_LINE_CLASSES = new Set(['live-table-header', 'live-table-row', 'live-table-separator'])
 
 export class LiveEditorPlus extends LiveEditor {
 
@@ -103,7 +106,7 @@ export class LiveEditorPlus extends LiveEditor {
     super.onInput()
   }
 
-  private handleTableAction(action: import('./table-edit.js').TableAction): void {
+  private handleTableAction(action: TableAction): void {
     if (!this.tableEdit?.isActive()) return
     const newLines = this.tableEdit.executeAction(action)
     if (newLines) this.applyTableLines(newLines)
@@ -119,7 +122,7 @@ export class LiveEditorPlus extends LiveEditor {
     // Re-activate the controller with updated block range
     const newEnd = start + newLines.length
     this.focusedBlockRange = [start, newEnd]
-    this.tableEdit.activate(this.root, [start, newEnd], newLines)
+    this.tableEdit.activate(this.root, [start, newEnd], extractTableData(parseLiveDocumentPlus(newLines)))
   }
 
   protected override renderAll(): void {
@@ -142,12 +145,11 @@ export class LiveEditorPlus extends LiveEditor {
 
   protected override onBlockFocusChange(oldRange: [number, number] | null, newRange: [number, number] | null): void {
     this.setupVisualBlocks()
+    const parsed = parseLiveDocumentPlus(this.lines)
     // Table edit controller — activate/deactivate on any mode
     if (newRange) {
-      const newFirstEl = this.root.querySelector(`[data-line="${newRange[0]}"]`) as HTMLElement | null
-      if (newFirstEl?.classList.contains('live-table-header')) {
-        const rawLines = this.lines.slice(newRange[0], newRange[1])
-        this.getTableEdit().activate(this.root, newRange, rawLines)
+      if (isTableHeaderBlock(parsed[newRange[0]]?.blockType)) {
+        this.getTableEdit().activate(this.root, newRange, extractTableData(parsed.slice(newRange[0], newRange[1])))
       } else {
         this.tableEdit?.deactivate()
       }
@@ -184,47 +186,19 @@ export class LiveEditorPlus extends LiveEditor {
       return
     }
 
-    // Check if the old block was a table block — find its lines and re-overlay
-    if (!firstLine.classList.contains('live-table-header')) return
-
-    // Collect the table block lines by data-line
-    const blockLines: HTMLElement[] = [firstLine]
-    for (let dl = oldRange[0] + 1; dl < oldRange[1]; dl++) {
-      const el = this.root.querySelector(`[data-line="${dl}"]`) as HTMLElement | null
-      if (el && this.isTableLine(el)) blockLines.push(el)
+    if (isTableHeaderBlock(parsed[oldRange[0]]?.blockType)) {
+      this.setupTableBlocksInRange(oldRange[0], oldRange[1])
     }
+  }
 
-    // Re-create overlay since block just lost focus
-    const tableData = this.extractTableFromDOM(blockLines)
-    if (tableData.headers.length === 0) return
+  protected override transformCopiedText(text: string): string {
+    const portable = portableTableTextForSelection(text, parseLiveDocumentPlus)
+    if (portable === null) return text
+    return this.tableEdit?.getPortableText() ?? portable
+  }
 
-    const table = renderStaticTable(tableData)
-    table.contentEditable = 'false'
-    table.classList.add('veloxmd-table-overlay')
-
-    const startLine = oldRange[0]
-    table.addEventListener('mousedown', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      for (const bl of blockLines) bl.style.display = ''
-      table.remove()
-      const fl = this.root.querySelector(`[data-line="${startLine}"]`) as HTMLElement
-      if (!fl) return
-      const walker = document.createTreeWalker(fl, NodeFilter.SHOW_TEXT)
-      const textNode = walker.nextNode()
-      if (textNode) {
-        const range = document.createRange()
-        range.setStart(textNode, 0)
-        range.collapse(true)
-        const sel = window.getSelection()
-        sel?.removeAllRanges()
-        sel?.addRange(range)
-      }
-      this.onSelectionChange()
-    })
-
-    for (const bl of blockLines) bl.style.display = 'none'
-    firstLine.parentNode?.insertBefore(table, firstLine)
+  refreshTableFontMetrics(): boolean {
+    return this.tableEdit?.refreshFontMetrics() ?? false
   }
 
   // ---------------------------------------------------------------------------
@@ -328,113 +302,16 @@ export class LiveEditorPlus extends LiveEditor {
   // ---------------------------------------------------------------------------
 
   private setupTableBlocks(): void {
-    const allLines = Array.from(this.root.querySelectorAll('.live-line')) as HTMLElement[]
-    this.setupTableInElements(allLines, 0, allLines.length)
+    this.setupTableBlocksInRange(0, this.lines.length)
   }
 
   private setupTableBlocksInRange(startIdx: number, endIdx: number): void {
-    const allLines = Array.from(this.root.querySelectorAll('.live-line')) as HTMLElement[]
-    this.setupTableInElements(allLines, startIdx, endIdx)
-  }
-
-  private isTableLine(el: HTMLElement): boolean {
-    return TABLE_LINE_CLASSES.has(el.classList[1]) ||
-      Array.from(TABLE_LINE_CLASSES).some(c => el.classList.contains(c))
-  }
-
-  private setupTableInElements(allLines: HTMLElement[], scanStart: number, scanEnd: number): void {
-    let i = scanStart
-
-    while (i < scanEnd && i < allLines.length) {
-      const line = allLines[i]
-
-      if (line.classList.contains('live-table-header')) {
-        // Collect all lines in this table block
-        const blockLines: HTMLElement[] = [line]
-        let j = i + 1
-        while (j < allLines.length && this.isTableLine(allLines[j])) {
-          blockLines.push(allLines[j])
-          j++
-        }
-
-        // Check if any line in the block is focused (being edited)
-        const isFocused = blockLines.some(l => l.classList.contains('focused'))
-
-        if (!isFocused) {
-          // Extract table data from parsed lines
-          const startLine = parseInt(line.dataset.line || '0')
-          const tableData = this.extractTableFromDOM(blockLines)
-
-          if (tableData.headers.length > 0) {
-            const table = renderStaticTable(tableData)
-            table.contentEditable = 'false'
-            table.classList.add('veloxmd-table-overlay')
-
-            // Click on overlay → focus the block (reveals source)
-            table.addEventListener('mousedown', (e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              // Show source lines, remove overlay
-              for (const bl of blockLines) bl.style.display = ''
-              table.remove()
-              // Place cursor in the header line
-              const firstLine = this.root.querySelector(`[data-line="${startLine}"]`) as HTMLElement
-              if (!firstLine) return
-              const walker = document.createTreeWalker(firstLine, NodeFilter.SHOW_TEXT)
-              const textNode = walker.nextNode()
-              if (textNode) {
-                const range = document.createRange()
-                range.setStart(textNode, 0)
-                range.collapse(true)
-                const sel = window.getSelection()
-                sel?.removeAllRanges()
-                sel?.addRange(range)
-              }
-              // Force selection change detection since the event may not fire
-              this.onSelectionChange()
-            })
-
-            // Hide source lines, show table overlay
-            for (const bl of blockLines) bl.style.display = 'none'
-            const insertBefore = blockLines[0]
-            insertBefore.parentNode?.insertBefore(table, insertBefore)
-          }
-        }
-
-        i = j
-        continue
-      }
-
-      i++
-    }
-  }
-
-  /** Extract TableModel from DOM elements (reads raw text content) */
-  private extractTableFromDOM(elements: HTMLElement[]): TableModel {
-    const lines: LiveLine[] = []
-    for (const el of elements) {
-      const raw = el.textContent || ''
-      let blockType = 'paragraph'
-      if (el.classList.contains('live-table-header')) blockType = 'table-header'
-      else if (el.classList.contains('live-table-separator')) blockType = 'table-separator'
-      else if (el.classList.contains('live-table-row')) blockType = 'table-row'
-
-      // Parse alignments from separator line
-      let tableAlignments: ('left' | 'center' | 'right' | 'default')[] | undefined
-      if (blockType === 'table-separator') {
-        tableAlignments = raw.split('|').filter(c => c.trim()).map(cell => {
-          const t = cell.trim()
-          const left = t.startsWith(':')
-          const right = t.endsWith(':')
-          if (left && right) return 'center' as const
-          if (right) return 'right' as const
-          if (left) return 'left' as const
-          return 'default' as const
-        })
-      }
-
-      lines.push({ raw, blockType, segments: [], tableAlignments } as LiveLine)
-    }
-    return extractTableData(lines)
+    setupHybridTableOverlays({
+      root: this.root,
+      parsedLines: parseLiveDocumentPlus(this.lines),
+      scanStart: startIdx,
+      scanEnd: endIdx,
+      onActivate: () => this.onSelectionChange(),
+    })
   }
 }

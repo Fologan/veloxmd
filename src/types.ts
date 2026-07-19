@@ -62,11 +62,22 @@ export type LiveSegmentKindPlus =
   | 'hard-break'
   | 'image-alt'
   | 'image-url'
+  | 'citation'
+  | 'reference-target'
+  | 'reference-label'
+
+export interface LiveReferenceMeta {
+  target: string
+  syntax: 'markdown-link' | 'markdown-image' | 'wikilink' | 'wikilink-embed'
+  embed: boolean
+  label?: string
+}
 
 /** A segment of inline content with its kind */
 export interface LiveSegment {
   text: string
   kind: LiveSegmentKind | LiveSegmentKindPlus
+  reference?: LiveReferenceMeta
 }
 
 /** A parsed line — block type + inline segments */
@@ -76,7 +87,7 @@ export interface LiveLine {
   blockLevel?: number
   segments: LiveSegment[]
   lang?: string
-  tableAlignments?: ('left' | 'center' | 'right' | 'default')[]
+  tableAlignments?: ('left' | 'center' | 'right' | 'justify' | 'default')[]
 }
 
 /** Editor view modes */
@@ -87,5 +98,5 @@ export interface ParseState {
   inCodeBlock: boolean
   inTable: boolean
   inMathBlock: boolean
-  tableAlignments: ('left' | 'center' | 'right' | 'default')[]
+  tableAlignments: ('left' | 'center' | 'right' | 'justify' | 'default')[]
 }

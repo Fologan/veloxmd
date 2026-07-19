@@ -27,6 +27,14 @@ describe('parseLiveInlinePlus', () => {
     expect(ref?.text).toBe('1')
   })
 
+  it('parses OpenAI citation markers as citation segments', () => {
+    const raw = '\uE200cite\uE202turn26view0\uE202turn27view0\uE201'
+    const segs = parseLiveInlinePlus(`texto ${raw}`)
+    const citation = segs.find(s => s.kind === 'citation')
+
+    expect(citation).toEqual({ text: raw, kind: 'citation' })
+  })
+
   it('parses reference link [text][ref]', () => {
     const segs = parseLiveInlinePlus('[click][ref-id]')
     expect(segs[0]).toEqual({ text: '[', kind: 'syntax' })

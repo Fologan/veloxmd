@@ -2,7 +2,7 @@
 // TableToolbar — Floating toolbar for table editing actions
 // =============================================================================
 
-import type { TableAlign } from './table-engine.js'
+import type { TableAlign } from './types.js'
 
 export type TableAction =
   | { type: 'add-row' }
@@ -13,6 +13,7 @@ export type TableAction =
   | { type: 'sort-desc' }
   | { type: 'set-align'; col: number; align: TableAlign }
   | { type: 'copy' }
+  | { type: 'copy-code' }
 
 // Button config: [action, label, title, accent?]
 type BtnCfg = [string, string, string, string?]
@@ -361,7 +362,10 @@ export class TableToolbar {
     html += '<div class="veloxmd-table-toolbar-sep" role="separator"></div>'
 
     // Copy button
-    html += `<button class="veloxmd-table-toolbar-btn copy" data-action="copy" title="Copy table to clipboard" aria-label="Copy table to clipboard">Copy</button>`
+    html += '<div class="veloxmd-table-toolbar-group">'
+    html += `<button class="veloxmd-table-toolbar-btn copy" data-action="copy" title="Copy portable table" aria-label="Copy portable table">Copy</button>`
+    html += `<button class="veloxmd-table-toolbar-btn copy" data-action="copy-code" title="Copy portable table as Markdown code block" aria-label="Copy portable table as Markdown code block">Copy Code</button>`
+    html += '</div>'
 
     // Cell indicator
     html += '<div class="veloxmd-table-toolbar-cell" title="Current cell">-- --</div>'
@@ -384,6 +388,7 @@ export class TableToolbar {
       case 'sort-asc':
       case 'sort-desc':
       case 'copy':
+      case 'copy-code':
         this.actionCb?.({ type: action } as TableAction)
         break
     }

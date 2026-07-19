@@ -1,9 +1,9 @@
-import {
-  type TableModel, type TableAlign, type TableRenderResult,
-  initTableCanvas, renderTableText, setTableCell, getTableCell,
-  graphemeLen, graphemeIdxToOffset, cursorToTableCell, tableCellToCursor,
-} from './table-engine.js'
-import { TableToolbar, type TableAction } from './table-toolbar.js'
+import { portableTableCode, portableTableText, writeTableClipboard } from './clipboard.js'
+import { cursorToTableCell, renderTableText, tableCellToCursor } from './live-render.js'
+import { getTableCell, setTableCell } from './model.js'
+import { TableToolbar, type TableAction } from './toolbar.js'
+import type { TableModel, TableRenderResult } from './types.js'
+import { graphemeLen, graphemeIdxToOffset, UnicodeWidthMeasurer } from './unicode-width.js'
 export { type TableAction }
 
 export class TableEditController {
@@ -12,7 +12,9 @@ export class TableEditController {
   private blockRange: [number, number] | null = null
   private activeRow = -1
   private activeCol = 0
-  private canvasInited = false
+  private root: HTMLElement | null = null
+  private measureElement: Element | null = null
+  private readonly measurer = new UnicodeWidthMeasurer()
   private toolbar: TableToolbar
   private actionCb: ((action: TableAction) => void) | null = null
   private rerenderCb: ((newLines: string[]) => void) | null = null
@@ -20,13 +22,15 @@ export class TableEditController {
 
   constructor(container: HTMLElement) { this.toolbar = new TableToolbar(container) }
 
-  activate(root: HTMLElement, blockRange: [number, number], rawLines: string[]): void {
-    if (!this.canvasInited) { initTableCanvas(getComputedStyle(root).font); this.canvasInited = true }
-    this.blockRange = blockRange
-    this.model = this.parseRawLines(rawLines)
-    this.lastRender = renderTableText(this.model)
-    this.activeRow = -1; this.activeCol = 0
+  activate(root: HTMLElement, blockRange: [number, number], model: TableModel): void {
+    this.root = root
     const el = root.querySelector(`[data-line="${blockRange[0]}"]`)
+    this.measureElement = el ?? root
+    this.measurer.configureFromElement(this.measureElement)
+    this.blockRange = blockRange
+    this.model = model
+    this.lastRender = this.renderLive()
+    this.activeRow = -1; this.activeCol = 0
     if (el) this.toolbar.show(el.getBoundingClientRect())
     this.toolbar.updateAlignments(this.model.colAligns)
     this.toolbar.updateCell(0, 0, this.model.rows.length + 1, this.model.headers.length)
@@ -34,7 +38,7 @@ export class TableEditController {
   }
   deactivate(): void {
     this.model = null; this.lastRender = null; this.blockRange = null
-    this.snapData = null; this.toolbar.hide()
+    this.root = null; this.measureElement = null; this.snapData = null; this.toolbar.hide()
   }
   isActive(): boolean { return this.model !== null }
   hasPendingSnap(): boolean { return this.snapData !== null }
@@ -44,6 +48,15 @@ export class TableEditController {
   getActiveCell() { return { row: this.activeRow, col: this.activeCol } }
   onNeedRerender(cb: (lines: string[]) => void): void { this.rerenderCb = cb }
   onAction(cb: (action: TableAction) => void): void { this.actionCb = cb }
+  refreshFontMetrics(): boolean {
+    if (!this.root || !this.measureElement || !this.model) return false
+    this.measurer.configureFromElement(this.measureElement, true)
+    this.lastRender = this.renderLive()
+    this.rerenderCb?.(this.lastRender.text.split('\n'))
+    return true
+  }
+  getPortableText(): string | null { return this.model ? portableTableText(this.model) : null }
+  getPortableCode(): string | null { return this.model ? portableTableCode(this.model) : null }
   snap(root: HTMLElement): void {
     if (!this.blockRange) return
     const lineTexts = this.readBlockTexts(root)
@@ -84,7 +97,7 @@ export class TableEditController {
     }
     setTableCell(this.model, cell.row, cell.col, txt)
     this.activeRow = cell.row; this.activeCol = cell.col
-    this.lastRender = renderTableText(this.model)
+    this.lastRender = this.renderLive()
     const rLines = this.lastRender.text.split('\n')
     for (let i = 0; i < rLines.length; i++) {
       const el = root.querySelector(`[data-line="${this.blockRange[0] + i}"]`) as HTMLElement | null
@@ -102,7 +115,7 @@ export class TableEditController {
       c++; if (c >= cc) { c = 0; r++
         if (r >= rc) {
           this.model.rows.push(new Array(cc).fill(''))
-          this.lastRender = renderTableText(this.model)
+          this.lastRender = this.renderLive()
           r = this.model.rows.length - 1
           this.rerenderCb?.(this.lastRender.text.split('\n'))
         }
@@ -119,7 +132,7 @@ export class TableEditController {
     const at = this.activeRow === -1 ? 0 : this.activeRow + 1
     this.model.rows.splice(at, 0, new Array(this.model.headers.length).fill(''))
     this.activeRow = at; this.activeCol = 0
-    this.lastRender = renderTableText(this.model); this.syncToolbar()
+    this.lastRender = this.renderLive(); this.syncToolbar()
     return this.lastRender.text.split('\n')
   }
   executeAction(action: TableAction): string[] | null {
@@ -142,39 +155,19 @@ export class TableEditController {
       case 'sort-asc':  this.model.rows.sort((a, b) => (a[this.activeCol] ?? '').localeCompare(b[this.activeCol] ?? '')); break
       case 'sort-desc': this.model.rows.sort((a, b) => (b[this.activeCol] ?? '').localeCompare(a[this.activeCol] ?? '')); break
       case 'set-align': this.model.colAligns[action.col] = action.align; break
-      case 'copy': navigator.clipboard.writeText(this.lastRender.text).catch(() => {}); return null
+      case 'copy': void writeTableClipboard(portableTableText(this.model)).catch(() => {}); return null
+      case 'copy-code': void writeTableClipboard(portableTableCode(this.model)).catch(() => {}); return null
     }
-    this.lastRender = renderTableText(this.model); this.syncToolbar()
+    this.lastRender = this.renderLive(); this.syncToolbar()
     return this.lastRender.text.split('\n')
   }
   destroy(): void {
-    this.deactivate(); this.toolbar.destroy()
+    this.deactivate(); this.toolbar.destroy(); this.measurer.destroy()
     this.actionCb = null; this.rerenderCb = null
   }
-  private parseRawLines(rawLines: string[]): TableModel {
-    const ext = (l: string): string[] => {
-      const t = l.trim(), s = t.startsWith('|') ? t.slice(1) : t
-      return (s.endsWith('|') ? s.slice(0, -1) : s).split('|').map(c => c.trim())
-    }
-    const headers = rawLines.length > 0 ? ext(rawLines[0]) : ['Col1']
-    const colAligns: TableAlign[] = headers.map(() => 'left')
-    if (rawLines.length > 1) {
-      rawLines[1].trim().replace(/^\|/, '').replace(/\|$/, '').split('|').forEach((cell, i) => {
-        if (i >= headers.length) return
-        const c = cell.trim()
-        if (c.startsWith('::') && c.endsWith('::')) colAligns[i] = 'justify'
-        else if (c.startsWith(':') && c.endsWith(':')) colAligns[i] = 'center'
-        else if (c.endsWith(':')) colAligns[i] = 'right'
-      })
-    }
-    const rows: string[][] = []
-    for (let i = 2; i < rawLines.length; i++) {
-      const cells = ext(rawLines[i])
-      while (cells.length < headers.length) cells.push('')
-      if (cells.length > headers.length) cells.length = headers.length
-      rows.push(cells)
-    }
-    return { headers, rows, colAligns, rowAligns: {} }
+
+  private renderLive(): TableRenderResult {
+    return renderTableText(this.model!, 'markdown', { measurer: this.measurer, widthMode: 'measured' })
   }
 
   private readBlockTexts(root: HTMLElement): string[] {

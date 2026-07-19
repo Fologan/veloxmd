@@ -2,6 +2,8 @@
 // Toolbar — VeloxMD editor toolbar (config-driven, zero per-button listeners)
 // =============================================================================
 
+import { TABLE_MARKDOWN_TEMPLATE } from './features/tables/line.js'
+
 // [action, innerHTML, title, group] — group number drives separator placement
 type BtnCfg = [string, string, string, number]
 
@@ -49,7 +51,7 @@ const ACTIONS: Record<string, (e: any) => void> = {
   'code-inline': e => e.toggleInline('`', '`', 'code'),
   link:          e => e.wrapOrInsert('[${sel}](url)', 'link text'),
   image:         e => e.wrapOrInsert('![${sel}](url)', 'alt text'),
-  table:         e => e.insertTemplate('| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |'),
+  table:         e => e.insertTemplate(TABLE_MARKDOWN_TEMPLATE),
   hr:            e => e.insertTemplate('\n---\n'),
   ul:            e => e.toggleBlock('- '),
   ol:            e => e.toggleBlock('1. '),

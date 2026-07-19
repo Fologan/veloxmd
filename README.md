@@ -1,255 +1,168 @@
 # VeloxMD
 
-In-place markdown editor for the web. Zero dependencies. ~2KB gzipped.
+Engine de Markdown in-place para web, sin framework de UI. El texto se formatea en el mismo lugar donde se edita y conserva paridad de caracteres entre el Markdown crudo y el DOM. Chart usa un renderer Canvas propio y virtualizado; Board usa DOM y Pointer Events nativos.
 
-The text formats itself as you type — no split view, no separate preview pane. Markdown syntax markers stay in the DOM but fade to near-invisible, so what you see is what you get.
+Este repositorio es el espejo standalone del engine que vive dentro de Zafiro. La versión actual es `0.1.0-alpha.5`.
 
-**[Live Demo](https://veloxmd.vercel.app)**
+## Fuente de verdad
 
-> **Alpha** — API may change between minor versions.
+La copia canónica y viva está en:
 
-## Install
-
-```bash
-npm install veloxmd
+```text
+C:\CODE\Zafiro\packages\@fologan\veloxmd
 ```
 
-## Quick Start
+La dirección de sincronización es siempre:
 
-### Basic Editor
-
-```ts
-import { LiveEditor } from 'veloxmd'
-import 'veloxmd/styles.css'
-
-const editor = new LiveEditor(document.getElementById('editor'))
-editor.setValue('# Hello **world**')
+```text
+Zafiro (canónico) -> C:\CODE\veloxmd (espejo standalone)
 ```
 
-### Full-Featured Editor with Toolbar
+Los cambios de runtime no deben desarrollarse primero en este espejo para copiarlos después a Zafiro. El payload compartido incluye `src/`, `test/`, `build-styles.mjs`, las configuraciones de TypeScript, tsup y Vitest, `LICENSE`, `AGENTS.md` y `UBIQUITOUS_LANGUAGE.md`.
+
+El shell propio de este repositorio se conserva aparte: `.git`, `.github`, `.gitignore`, `index.html`, `spec/`, `TODO.md`, `package-lock.json` y los archivos locales ignorados. El nombre de paquete standalone continúa siendo `veloxmd`; dentro del monorepo canónico se llama `@fologan/veloxmd`.
+
+## Límite de responsabilidad
+
+VeloxMD contiene exclusivamente capacidades del engine Markdown:
+
+- Parseo inline y por bloques.
+- Render DOM y estilos.
+- Viewer de solo lectura.
+- Editor in-place y manejo de selección/cursor.
+- Modos `source` y `hybrid`.
+- Toolbar y edición de tablas.
+- Reconocimiento de sintaxis de referencias.
+- Bloques visuales inline: Board respaldado por tareas Markdown y Chart respaldado por JSON data-only.
+
+VeloxMD no contiene ni debe contener:
+
+- Apertura o escaneo de vaults.
+- Resolución de rutas o navegación entre archivos.
+- Índices, backlinks o búsqueda.
+- Persistencia, SQLite o acceso al filesystem.
+- Memoria, datasets, embeddings o LLMs.
+- Tauri o lógica propia de una aplicación host.
+
+La feature `reference-syntax` sólo reconoce links Markdown, imágenes, `[[wikilinks]]` y `![[embeds]]`. Preserva el texto fuente y expone metadatos genéricos `data-reference-*`; resolver el destino corresponde por completo a la aplicación consumidora.
+
+## Consumo local
+
+No es necesario publicar nada en npm.
+
+Primero prepara el engine:
+
+```powershell
+cd C:\CODE\veloxmd
+npm install
+npm run build
+```
+
+Después, desde una aplicación hermana como FastMD:
+
+```powershell
+cd C:\CODE\FastMD
+npm install ..\veloxmd
+```
+
+La dependencia resultante puede declararse de forma reproducible así:
+
+```json
+{
+  "dependencies": {
+    "veloxmd": "file:../veloxmd"
+  }
+}
+```
+
+El paquete exporta archivos generados en `dist/`, por lo que el engine debe compilarse después de sincronizar cambios y antes de ejecutar o construir la aplicación consumidora.
+
+## Uso rápido
 
 ```ts
 import { LiveEditorPlus } from 'veloxmd'
 import 'veloxmd/styles.css'
 
-const editor = new LiveEditorPlus(document.getElementById('editor'), {
+const editor = new LiveEditorPlus(document.getElementById('editor')!, {
   toolbar: true,
-  onChange: (text) => console.log('Content changed:', text.length, 'chars'),
-  placeholder: 'Start writing...',
+  placeholder: 'Escribe Markdown...',
+  onChange: (markdown) => console.log(markdown),
 })
 
-editor.setValue('# Hello **world**')
+editor.setValue('# Hola **mundo**')
+editor.setViewMode('hybrid')
 ```
 
-### Static Viewer (read-only)
+Viewer estático:
 
 ```ts
 import { LiveViewer } from 'veloxmd'
 import 'veloxmd/styles.css'
 
-const viewer = new LiveViewer(document.getElementById('preview'))
-viewer.setValue('# Hello **world**')
+const viewer = new LiveViewer(document.getElementById('preview')!)
+viewer.setValue('# Documento')
 ```
 
-Same CSS, same styling — but no `contenteditable`, no event listeners, no undo stack. One-pass render, zero runtime overhead.
+## Modos
 
-## View Modes
+| Modo | Superficie | Comportamiento |
+| --- | --- | --- |
+| `source` | `LiveEditorPlus` | Markdown editable con sintaxis visible. |
+| `hybrid` | `LiveEditorPlus` | Oculta sintaxis no enfocada y la revela al editar, optimizado por bloque. |
+| `static` | `LiveViewer` | Render de solo lectura sin `contenteditable`. |
 
-VeloxMD has three ways to display markdown:
+## Capacidades actuales
 
-| Mode | Class | What you see |
-|------|-------|-------------|
-| **Source** | `LiveEditorPlus` | Full editor with live formatting. Headings scale up, bold/italic render in place, and syntax markers (`#`, `**`, etc.) stay visible alongside the formatted text. The focused line brightens markers for clarity. |
-| **Hybrid** | `LiveEditorPlus` + `setViewMode('hybrid')` | Same live formatting, but syntax markers collapse to zero-width on unfocused lines and expand with animation on focus — a clean reading experience that reveals markdown on demand. |
-| **Static** | `LiveViewer` | Read-only rendered output. No syntax markers, no editing, no runtime overhead. |
+- Headings, párrafos, blockquotes, listas y horizontal rules.
+- Bold, italic, bold-italic, strikethrough y código inline.
+- Links, imágenes, autolinks y links de referencia.
+- Wikilinks y embeds con metadata genérica no resuelta.
+- Code fences, task lists, footnotes y HTML inline soportado.
+- Math inline y por bloque, highlight, superíndice y subíndice.
+- Tablas con alineación, render estático y edición asistida.
+- Details/summary y alt headings.
+- Toolbar, atajos, undo/redo, clipboard e IME/composition.
+- Selección entre líneas, navegación por teclado y autoscroll del caret.
+- Render incremental por bloque con fallback seguro a render completo.
+- Character parity: cada carácter del Markdown crudo permanece representado en el DOM editable.
 
-Source mode is what makes VeloxMD unique — it's not a plain-text editor with a preview pane. The text formats itself as you type while keeping every markdown character editable in place.
+Las carpetas `features/mermaid` y `features/kanban` son scaffolds de organización; todavía no contienen runtime activo.
+
+## API principal
 
 ```ts
-// Switch between source and hybrid at runtime
-editor.setViewMode('hybrid')
-editor.setViewMode('source')
+new LiveEditor(container, options)
+new LiveEditorPlus(container, options)
+new LiveViewer(container)
+
+editor.setValue(markdown)
+editor.getValue()
+editor.setViewMode('source' | 'hybrid')
+editor.insert(text)
+editor.toggleInline(before, after, placeholder)
+editor.toggleBlock(prefix)
+editor.insertTemplate(template)
+editor.undo()
+editor.redo()
+editor.destroy()
 ```
 
-## How It Works
+También se exportan parsers, renderers, utilidades de cursor y primitives del table engine desde `src/index.ts`.
 
-VeloxMD uses **character parity** — a design principle where every raw markdown character stays in the DOM. Syntax markers like `#`, `**`, `*`, `` ` `` are not removed; they're wrapped in `<span class="syntax">` and dimmed with CSS opacity.
+## Verificación
 
-This means the flat character offset in your raw text always matches the flat offset in the DOM. Cursor save/restore after re-rendering becomes trivial — no complex position mapping needed. The entire cursor system is ~50 lines of code.
-
-The editor uses `contenteditable` with full re-rendering on each keystroke. Because every character has a 1:1 DOM representation, this "naive" approach just works, and the codebase stays small.
-
-### Hybrid Mode
-
-In hybrid mode, syntax spans on unfocused lines collapse to `width: 0` via CSS transitions. The `HybridController` measures text widths using an offscreen canvas (`measureText`) so the CSS can animate between collapsed and expanded states. Click correction compensates for the layout shift — when you click a collapsed line, the controller maps the visual click position to the correct character offset in the expanded layout.
-
-## Markdown Support
-
-| Feature | `LiveEditor` | `LiveEditorPlus` |
-|---|:---:|:---:|
-| Headings (`#` to `######`) | ✓ | ✓ |
-| Bold, Italic, Bold-Italic | ✓ | ✓ |
-| Strikethrough (`~~`) | ✓ | ✓ |
-| Inline code | ✓ | ✓ |
-| Links `[text](url)` | ✓ | ✓ |
-| Images `![alt](url)` | ✓ | ✓ |
-| Blockquotes (nested) | ✓ | ✓ |
-| Ordered & unordered lists | ✓ | ✓ |
-| Code blocks (fenced) | ✓ | ✓ |
-| Horizontal rules | ✓ | ✓ |
-| Escape sequences | ✓ | ✓ |
-| Tables | | ✓ |
-| Task lists | | ✓ |
-| Footnotes | | ✓ |
-| Autolinks (`<url>`) | | ✓ |
-| Reference links | | ✓ |
-| HTML inline (`<kbd>`, `<mark>`, `<u>`) | | ✓ |
-| Superscript / Subscript | | ✓ |
-| Math (`$...$`) | | ✓ |
-| Highlight (`==..==`) | | ✓ |
-| `<details>` / `<summary>` | | ✓ |
-| Hard breaks | | ✓ |
-| HTML comments | | ✓ |
-| Alt heading syntax (`===`, `---`) | | ✓ |
-| Image preview | | ✓ |
-| Hybrid view mode | | ✓ |
-
-## Toolbar
-
-Enable a native formatting toolbar by passing `toolbar: true` in options. No external dependencies — all buttons are text/unicode with a single SVG for the link icon.
-
-```ts
-const editor = new LiveEditorPlus(container, { toolbar: true })
+```powershell
+npm test
+npm run build:check
+npm run build
 ```
 
-The toolbar includes: Undo/Redo, Headings (dropdown H1-H6), Bold, Italic, Underline, Strikethrough, Highlight, Inline Code, Link, Image, Table, Horizontal Rule, Bullet List, Ordered List, Task List, Blockquote, Code Block, Details/Summary, Superscript, Subscript, Math, and Footnote.
+`dist/` es un artefacto local generado y no forma parte del payload sincronizado ni del control de versiones.
 
-### Smart Insertion
+## Publicación
 
-Toolbar buttons and keyboard shortcuts detect whether text is selected:
+El flujo local mediante `file:../veloxmd` cubre el consumo entre los tres repositorios. Esta puesta al corriente no requiere `npm publish`, un registro privado ni `npm link` global.
 
-- **Text selected** — wraps the selection (e.g. select "hello" + click Bold → `**hello**`)
-- **No selection** — inserts a placeholder with the text pre-selected for immediate typing
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+B | Bold |
-| Ctrl+I | Italic |
-| Ctrl+U | Underline |
-| Ctrl+E | Inline code |
-| Ctrl+K | Link |
-| Ctrl+Shift+X | Strikethrough |
-| Ctrl+Shift+K | Code block |
-| Ctrl+Shift+Q | Blockquote |
-| Ctrl+Shift+O | Ordered list |
-| Ctrl+Shift+U | Unordered list |
-| Ctrl+Shift+H | Horizontal rule |
-
-### Toolbar Theming
-
-The toolbar uses its own set of CSS custom properties for easy customization:
-
-```css
-.my-editor-container {
-  --veloxmd-toolbar-bg: #ffffff;
-  --veloxmd-toolbar-border: #e1e4e8;
-  --veloxmd-toolbar-text: #24292e;
-  --veloxmd-toolbar-button-hover: #f0f1f3;
-  --veloxmd-toolbar-button-active: #e1e4e8;
-  --veloxmd-toolbar-separator: #d1d5da;
-  --veloxmd-toolbar-radius: 6px;
-  --veloxmd-toolbar-dropdown-bg: #ffffff;
-  --veloxmd-toolbar-dropdown-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-```
-
-The toolbar is responsive — buttons that overflow are automatically moved to a `⋯` overflow menu.
-
-## Theming
-
-VeloxMD uses CSS custom properties prefixed with `--veloxmd-`. Override them to match your app's design:
-
-```css
-.my-editor-container {
-  --veloxmd-bg: #1a1a2e;
-  --veloxmd-text: #eaeaea;
-  --veloxmd-text-bright: #ffffff;
-  --veloxmd-text-muted: #888;
-  --veloxmd-syntax: #555;
-  --veloxmd-accent: #e94560;
-  --veloxmd-green: #0f3460;
-  --veloxmd-purple: #a855f7;
-  --veloxmd-red: #ef4444;
-  --veloxmd-orange: #f97316;
-  --veloxmd-surface: #16213e;
-  --veloxmd-surface-2: #1a1a2e;
-  --veloxmd-border: #333;
-  --veloxmd-border-bright: #444;
-}
-```
-
-A built-in dark theme is available by setting `data-theme="dark"` on any ancestor element.
-
-## API
-
-### `LiveEditor` / `LiveEditorPlus`
-
-```ts
-new LiveEditor(container: HTMLElement, options?: EditorOptions)
-new LiveEditorPlus(container: HTMLElement, options?: EditorOptions)
-
-interface EditorOptions {
-  onChange?: (text: string) => void  // fires on every content change
-  placeholder?: string              // placeholder text when editor is empty
-  toolbar?: boolean                 // show formatting toolbar (default: false)
-}
-
-editor.setValue(markdown: string): void
-editor.getValue(): string
-editor.setViewMode(mode: 'source' | 'hybrid'): void
-editor.getViewMode(): 'source' | 'hybrid'
-editor.onChange(callback: (text: string) => void): void
-editor.insert(text: string): void                              // insert at cursor
-editor.toggleInline(before: string, after: string, placeholder: string): void  // wrap selection or insert
-editor.toggleBlock(prefix: string): void                       // toggle line prefix
-editor.insertTemplate(template: string): void                  // insert multi-line template
-editor.undo(): void
-editor.redo(): void
-editor.destroy(): void
-```
-
-### `LiveViewer`
-
-```ts
-new LiveViewer(container: HTMLElement)
-
-viewer.setValue(markdown: string): void
-viewer.destroy(): void
-```
-
-### Parsers
-
-```ts
-import { parseLiveDocument, parseLiveDocumentPlus } from 'veloxmd'
-
-const lines = parseLiveDocument(['# Hello', '', '**Bold** text'])
-// Returns LiveLine[] with block types and inline segments
-```
-
-### Cursor Utilities
-
-```ts
-import { getFlatOffset, setFlatOffset } from 'veloxmd'
-
-// Convert DOM position -> flat character offset
-const offset = getFlatOffset(container, node, nodeOffset)
-
-// Convert flat offset -> DOM position
-const pos = setFlatOffset(container, 42)
-```
-
-## License
+## Licencia
 
 [MIT](LICENSE) - Fologan

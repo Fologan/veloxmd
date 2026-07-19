@@ -3,8 +3,12 @@
 // =============================================================================
 
 import type { LiveSegment, LiveLine } from './types.js'
+import { createReferenceNode } from './features/reference-syntax/render.js'
 
 export function createSegmentNode(seg: LiveSegment): Node {
+  const reference = createReferenceNode(seg)
+  if (reference) return reference
+
   switch (seg.kind) {
     case 'syntax': {
       const s = document.createElement('span')

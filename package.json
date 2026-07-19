@@ -1,7 +1,7 @@
 {
   "name": "veloxmd",
-  "version": "0.1.0-alpha.4",
-  "description": "In-place markdown editor. Zero dependencies. The text formats itself.",
+  "version": "0.1.0-alpha.5",
+  "description": "In-place markdown editor with lightweight interactive visual blocks.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsup && node -e \"require('fs').copyFileSync('src/styles.css','dist/styles.css')\"",
+    "build": "tsup && node build-styles.mjs",
     "build:check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -40,7 +40,6 @@
     "contenteditable",
     "in-place",
     "live-preview",
-    "zero-dependency",
     "lightweight"
   ],
   "author": "Fologan",

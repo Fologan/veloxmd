@@ -5,6 +5,40 @@
 
 import type { LiveSegment } from './types.js'
 import { parseLiveInline } from './parse-inline.js'
+import { parseWikilinkInline } from './features/reference-syntax/parse.js'
+
+const CITATION_START = '\uE200'
+const CITATION_END = '\uE201'
+const CITATION_SEPARATOR = '\uE202'
+const CITATION_PREFIX = `${CITATION_START}cite${CITATION_SEPARATOR}`
+
+function annotateBaseMarkdownReferences(input: LiveSegment[]): LiveSegment[] {
+  return input.map((segment, index) => {
+    if (segment.kind !== 'link-text') return segment
+    const opening = input[index - 1]
+    const separator = input[index + 1]
+    const target = input[index + 2]
+    if (
+      opening?.kind !== 'syntax' ||
+      (opening.text !== '[' && opening.text !== '![') ||
+      separator?.kind !== 'syntax' ||
+      separator.text !== '](' ||
+      target?.kind !== 'link-url'
+    ) {
+      return segment
+    }
+    const embed = opening.text === '!['
+    return {
+      ...segment,
+      reference: {
+        target: target.text,
+        syntax: embed ? 'markdown-image' : 'markdown-link',
+        embed,
+        ...(segment.text ? { label: segment.text } : {}),
+      },
+    }
+  })
+}
 
 export function parseLiveInlinePlus(text: string): LiveSegment[] {
   const segments: LiveSegment[] = []
@@ -14,12 +48,31 @@ export function parseLiveInlinePlus(text: string): LiveSegment[] {
   const flush = () => {
     if (buf) {
       // Run base parser on accumulated plain text
-      segments.push(...parseLiveInline(buf))
+      segments.push(...annotateBaseMarkdownReferences(parseLiveInline(buf)))
       buf = ''
     }
   }
 
   while (i < text.length) {
+    const wikilink = parseWikilinkInline(text, i)
+    if (wikilink) {
+      flush()
+      segments.push(...wikilink.segments)
+      i += wikilink.length
+      continue
+    }
+
+    // OpenAI citation marker: \uE200cite\uE202turn...\uE201
+    if (text.startsWith(CITATION_PREFIX, i)) {
+      const end = text.indexOf(CITATION_END, i + CITATION_PREFIX.length)
+      if (end !== -1) {
+        flush()
+        segments.push({ text: text.slice(i, end + 1), kind: 'citation' })
+        i = end + 1
+        continue
+      }
+    }
+
     // HTML paired tags: <kbd>content</kbd>, <mark>content</mark>, <u>content</u>
     if (text[i] === '<') {
       const rest = text.slice(i)
@@ -83,7 +136,16 @@ export function parseLiveInlinePlus(text: string): LiveSegment[] {
           if (titleMatch) {
             flush()
             segments.push({ text: '![', kind: 'syntax' })
-            segments.push({ text: text.slice(i + 2, altEnd), kind: 'image-alt' })
+            segments.push({
+              text: text.slice(i + 2, altEnd),
+              kind: 'image-alt',
+              reference: {
+                target: titleMatch[1],
+                syntax: 'markdown-image',
+                embed: true,
+                ...(text.slice(i + 2, altEnd) ? { label: text.slice(i + 2, altEnd) } : {}),
+              },
+            })
             segments.push({ text: '](', kind: 'syntax' })
             segments.push({ text: titleMatch[1], kind: 'image-url' })
             segments.push({ text: ' "', kind: 'syntax' })
@@ -97,7 +159,16 @@ export function parseLiveInlinePlus(text: string): LiveSegment[] {
           if (urlEnd !== -1) {
             flush()
             segments.push({ text: '![', kind: 'syntax' })
-            segments.push({ text: text.slice(i + 2, altEnd), kind: 'image-alt' })
+            segments.push({
+              text: text.slice(i + 2, altEnd),
+              kind: 'image-alt',
+              reference: {
+                target: text.slice(altEnd + 2, urlEnd),
+                syntax: 'markdown-image',
+                embed: true,
+                ...(text.slice(i + 2, altEnd) ? { label: text.slice(i + 2, altEnd) } : {}),
+              },
+            })
             segments.push({ text: '](', kind: 'syntax' })
             segments.push({ text: text.slice(altEnd + 2, urlEnd), kind: 'image-url' })
             segments.push({ text: ')', kind: 'syntax' })
@@ -159,7 +230,16 @@ export function parseLiveInlinePlus(text: string): LiveSegment[] {
           const urlEnd = textEnd + 2 + titleMatch[0].length - 1
           flush()
           segments.push({ text: '[', kind: 'syntax' })
-          segments.push({ text: text.slice(i + 1, textEnd), kind: 'link-text' })
+          segments.push({
+            text: text.slice(i + 1, textEnd),
+            kind: 'link-text',
+            reference: {
+              target: titleMatch[1],
+              syntax: 'markdown-link',
+              embed: false,
+              label: text.slice(i + 1, textEnd),
+            },
+          })
           segments.push({ text: '](', kind: 'syntax' })
           segments.push({ text: titleMatch[1], kind: 'link-url' })
           segments.push({ text: ' "', kind: 'syntax' })
